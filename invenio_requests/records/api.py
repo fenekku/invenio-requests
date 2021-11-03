@@ -7,15 +7,17 @@
 
 """API classes for requests in Invenio."""
 
+from collections import namedtuple
 from datetime import datetime
+from enum import Enum
 
 from invenio_records.dumpers import ElasticsearchDumper
-from invenio_records.systemfields import ConstantField
+from invenio_records.systemfields import ConstantField, DictField, ModelField
 from invenio_records_resources.records.api import Record
 from invenio_records_resources.records.systemfields import IndexField
 
 from .actions import AcceptAction, CancelAction, DeclineAction
-from .models import RequestMetadata
+from .models import RequestMetadata, RequestEventModel
 from .schema import RequestSchema
 from .systemfields import IdentityField, RequestStatusField
 
@@ -112,3 +114,51 @@ class Request(Record):
 
     def execute_action(self, action_name, executor):
         return self.get_action(action_name).execute(executor)
+
+
+class RequestEventType(Enum):
+    """Request Event type enum."""
+
+    COMMENT = "C"
+    DELETED_COMMENT = "D"
+
+
+class RequestEventFormat(Enum):
+    """Comment/content format enum."""
+
+    HTML = "html"
+
+
+FakePID = namedtuple("FakePID", ["pid_value"])
+"""PID workaround."""
+
+
+class RequestEvent(Record):
+    """A Request Event."""
+
+    model_cls = RequestEventModel
+
+    # Systemfields
+    metadata = None
+
+    request = ModelField(dump=False)
+    """The request."""
+
+    type = ModelField("type")
+    """The human-readable event type."""
+
+    index = IndexField(
+        "request_events-event-v1.0.0", search_alias="request_events"
+    )
+    """The ES index used."""
+
+    id = ModelField("id")
+    """The data-layer id."""
+
+    created_by = DictField("created_by")
+    """Who created the event."""
+
+    @property
+    def pid(self):
+        """Fake pid interface to comply with the RecordLink interface."""
+        return FakePID(self.id)

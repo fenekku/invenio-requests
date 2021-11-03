@@ -10,11 +10,13 @@
 
 """Services module."""
 
-from .comments import RequestCommentsService, RequestCommentsServiceConfig
 from .registry import RequestTypeRegistry
 from .requests import RequestsService, RequestsServiceConfig
+from .events import RequestEventsService, RequestEventsServiceConfig
 
 __all__ = (
+    "RequestEventsService",
+    "RequestEventsServiceConfig",
     "RequestsService",
     "RequestsServiceConfig",
     "RequestTypeRegistry",

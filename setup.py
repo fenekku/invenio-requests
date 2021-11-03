@@ -103,7 +103,7 @@ setup(
         ],
         "invenio_search.mappings": [
             "requests = invenio_requests.records.mappings",
-            "request_comments = invenio_requests.records.mappings",
+            "request_events = invenio_requests.records.mappings",
         ],
         "invenio_i18n.translations": [
             "messages = invenio_requests",

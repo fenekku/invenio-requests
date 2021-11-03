@@ -14,8 +14,8 @@ from invenio_base.utils import load_or_import_from_config
 from . import config
 from .resources import RequestsResource, RequestsResourceConfig
 from .services import (
-    RequestCommentsService,
-    RequestCommentsServiceConfig,
+    RequestEventsService,
+    RequestEventsServiceConfig,
     RequestsService,
     RequestsServiceConfig,
     RequestTypeRegistry,
@@ -58,7 +58,7 @@ class InvenioRequests:
             requests = RequestsServiceConfig.customize(
                 permission_policy=permission_policy,
             )
-            request_comments = RequestCommentsServiceConfig.customize(
+            request_comments = RequestEventsServiceConfig.customize(
                 permission_policy=permission_policy,
             )
 
@@ -71,11 +71,12 @@ class InvenioRequests:
         self.requests_service = RequestsService(
             config=service_configs.requests,
         )
-        self.request_comments_service = RequestCommentsService(
+        self.request_events_service = RequestEventsService(
             config=service_configs.request_comments,
         )
 
     def init_resources(self):
+        """Init resources."""
         self.requests_resource = RequestsResource(
             service=self.requests_service,
             config=RequestsResourceConfig,

@@ -12,6 +12,7 @@ class RequestTypeRegistry:
     """Registry for looking up registerd request types per name."""
 
     def __init__(self, registered_types):
+        """Constructor."""
         self.registered_types = registered_types
 
     def register_type(self, request_class, as_type=None, force=False):

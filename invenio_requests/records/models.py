@@ -27,3 +27,15 @@ class RequestMetadata(db.Model, RecordMetadataBase):
     # TODO later
     # labels: maybe per-community CVs
     # assignees: enables notifications? no impact on permissions
+
+
+class RequestEventModel(db.Model, RecordMetadataBase):
+    """Request Events model."""
+
+    __tablename__ = "request_events"
+
+    type = db.Column(db.String(1), nullable=False)
+    request_id = db.Column(
+        UUIDType, db.ForeignKey(RequestMetadata.id, ondelete="CASCADE")
+    )
+    request = db.relationship(RequestMetadata)

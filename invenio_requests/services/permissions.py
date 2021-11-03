@@ -9,8 +9,72 @@
 
 """Request permissions."""
 
+from flask_principal import UserNeed
+from invenio_access.permissions import any_user
 from invenio_records_permissions import RecordPermissionPolicy
+from invenio_records_permissions.generators import Generator
 from invenio_records_permissions.generators import AnyUser, SystemProcess
+
+
+class Requesters(Generator):
+    """Allows request makers."""
+
+    def needs(self, request=None, **kwargs):
+        """Enabling Needs.
+
+        record is a request here
+        """
+        # TODO when request is more fleshed out
+        return [any_user]
+        # return [
+        #     UserNeed(owner.owner_id) for owner in record.access.owners
+        # ]
+        # even above could be optimized without caching by using raw ids
+
+
+    def query_filter(self, identity=None, **kwargs):
+        """Filters for current identity as owner."""
+        # TODO when request is more fleshed out
+        return []
+
+
+class Reviewers(Generator):
+    """Allows request reviewers."""
+
+    def needs(self, request=None, **kwargs):
+        """Enabling Needs.
+
+        record is a request here
+        """
+        # TODO when request is more fleshed out
+        return [any_user]
+        # return [
+        #     UserNeed(owner.owner_id) for owner in record.access.owners
+        # ]
+        # even above could be optimized without caching by using raw ids
+
+
+    def query_filter(self, identity=None, **kwargs):
+        """Filters for current identity as owner."""
+        # TODO when request is more fleshed out
+        return []
+
+
+class Commenter(Generator):
+    """Allows request event commenter."""
+
+    def needs(self, event=None, **kwargs):
+        """Enabling Needs."""
+        # TODO: postponed until we have a common owner/creator since it is
+        #       used in multiple places
+        return [any_user]
+        # return [UserNeed(event.created_by.owner_id)] if event else []
+
+    def query_filter(self, identity=None, **kwargs):
+        """Filters for current identity as creator."""
+        users = [n.value for n in identity.provides if n.method == "id"]
+        if users:
+            return Q("terms", **{"created_by.user": users})
 
 
 class PermissionPolicy(RecordPermissionPolicy):
@@ -21,3 +85,17 @@ class PermissionPolicy(RecordPermissionPolicy):
     can_create = [SystemProcess(), AnyUser()]
     can_update = [SystemProcess(), AnyUser()]
     can_delete = [SystemProcess(), AnyUser()]
+
+    # **Request Events Permission policy.**
+    # Comments need special cases for some actions
+    can_create_event_comment = [Requesters(), Reviewers(), SystemProcess()]
+    can_update_event_comment = [Commenter(), SystemProcess()]
+    # Reviewers too for moderation
+    can_delete_event_comment = [Commenter(), Reviewers(), SystemProcess()]
+
+    # Other events are all the same
+    can_create_event = [SystemProcess()]
+    can_read_event = [Requesters(), Reviewers(), SystemProcess()]
+    can_update_event = [SystemProcess()]
+    can_delete_event = [SystemProcess()]
+    can_search_event = [Requesters(), Reviewers(), SystemProcess()]

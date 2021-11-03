@@ -9,12 +9,10 @@
 
 """Request comment services module."""
 
-from .config import RequestCommentsServiceConfig
-from .results import CommentResultItem
-from .service import RequestCommentsService
+from .config import RequestEventsServiceConfig
+from .service import RequestEventsService
 
 __all__ = (
-    "CommentResultItem",
-    "RequestCommentsService",
-    "RequestCommentsServiceConfig",
+    "RequestEventsService",
+    "RequestEventsServiceConfig",
 )

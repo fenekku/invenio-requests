@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2021 CERN.
 # Copyright (C) 2021 TU Wien.
+# Copyright (C) 2021 Northwestern University.
 #
 # Invenio-Requests is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -24,11 +25,12 @@ def _make_cls(cls, attrs):
     )
 
 
-class RequestCommentsConfigMixin:
+class CustomizationConfigMixin:
     """Shared customization for request comments service config."""
 
     @classmethod
     def customize(cls, permission_policy=None):
+        """Customize."""
         attrs = {}
 
         # permission policy

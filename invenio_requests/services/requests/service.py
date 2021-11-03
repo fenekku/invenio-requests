@@ -33,12 +33,15 @@ class RequestsService(RecordService):
 
     @property
     def request_type_registry(self):
+        """Request_type_registry."""
         return current_registry
 
     def _wrap_schema(self, schema):
+        """Wrap schema."""
         return ServiceSchemaWrapper(self, schema)
 
     def _request_from_model(self, model):
+        """Request from model."""
         # TODO handle 'model is None' more gracefully
         #      -> may happen e.g. when reading a deleted request
         request_cls = self.request_type_registry.lookup(
@@ -47,6 +50,7 @@ class RequestsService(RecordService):
         return request_cls(model.data, model=model)
 
     def _get_request(self, id_):
+        """Placeholder docstring."""
         # TODO first query by external ID, then by internal?
         try:
             model = self.record_cls.model_cls.query.filter_by(
