@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 CERN.
+# Copyright (C) 2021 Northwestern University.
 # Copyright (C) 2021 TU Wien.
 #
 # Invenio-Requests is free software; you can redistribute it and/or
@@ -12,7 +13,11 @@
 from flask_principal import UserNeed
 from invenio_access.permissions import any_user
 from invenio_records_permissions import RecordPermissionPolicy
-from invenio_records_permissions.generators import AnyUser, Generator, SystemProcess
+from invenio_records_permissions.generators import (
+    AnyUser,
+    Generator,
+    SystemProcess,
+)
 
 
 class Requesters(Generator):

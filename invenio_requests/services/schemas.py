@@ -10,16 +10,24 @@
 """Request Event Schemas."""
 
 from invenio_records_resources.services.records.schema import BaseRecordSchema
-from marshmallow import fields, validate
+from marshmallow import fields, missing, validate
 from marshmallow_utils import fields as utils_fields
 
 from ..records.api import RequestEventFormat, RequestEventType
 
 
+class ModelFieldStr(fields.Str):
+    """Marshmallow field for serializing by attribute before item."""
+
+    def get_value(self, obj, attr, **kwargs):
+        """Return obj.attr or obj[attr] in this precedence order."""
+        return getattr(obj, attr, obj.get(attr, missing))
+
+
 class RequestEventSchema(BaseRecordSchema):
     """Schema."""
 
-    type = fields.Str(
+    type = ModelFieldStr(
         required=True,
         validate=validate.OneOf(choices=[e.value for e in RequestEventType]),
     )

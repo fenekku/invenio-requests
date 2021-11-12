@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2021 TU Wien.
+# Copyright (C) 2021 Northwestern University.
 #
 # Invenio-Requests is free software; you can redistribute it and/or modify
 # it under the terms of the MIT License; see LICENSE file for more details.
 
 """API classes for requests in Invenio."""
 
-from collections import namedtuple
 from datetime import datetime
 from enum import Enum
 
@@ -175,10 +175,6 @@ class RequestEventFormat(Enum):
     HTML = "html"
 
 
-FakePID = namedtuple("FakePID", ["pid_value"])
-"""PID workaround."""
-
-
 class RequestEvent(Record):
     """A Request Event."""
 
@@ -190,6 +186,9 @@ class RequestEvent(Record):
     request = ModelField(dump=False)
     """The request."""
 
+    request_id = DictField("request_id")
+    """The data-layer id of the related Request."""
+
     type = ModelField("type")
     """The human-readable event type."""
 
@@ -199,10 +198,6 @@ class RequestEvent(Record):
     id = ModelField("id")
     """The data-layer id."""
 
+    # TODO: Revisit when dealing with ownership
     created_by = DictField("created_by")
     """Who created the event."""
-
-    @property
-    def pid(self):
-        """Fake pid interface to comply with the RecordLink interface."""
-        return FakePID(self.id)

@@ -144,6 +144,7 @@ class RequestsResource(RecordResource):
     @request_headers
     @request_view_args
     def execute_action(self):
+        """Execute action."""
         item = self.service.execute_action(
             action=resource_requestctx.view_args["action"],
             id_=resource_requestctx.view_args["id"],

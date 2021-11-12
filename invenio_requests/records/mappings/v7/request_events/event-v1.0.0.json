@@ -27,6 +27,9 @@
       "request": {
         "type": "keyword"
       },
+      "request_id": {
+        "type": "keyword"
+      },
       "content": {
         "type": "text"
       },

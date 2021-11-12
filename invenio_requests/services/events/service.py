@@ -11,6 +11,7 @@
 
 from invenio_db import db
 from invenio_records_resources.services import RecordService
+from invenio_records_resources.services.base.links import LinksTemplate
 
 from ...records.api import Request, RequestEventType
 
@@ -38,8 +39,7 @@ class RequestEventsService(RecordService):
 
         # It's the components that save the actual data in the record.
         record = self.record_cls.create(
-            {},
-            request=request.model,
+            {}, request=request.model, request_id=request_id,
             type=data["type"],
         )
 
@@ -87,7 +87,12 @@ class RequestEventsService(RecordService):
         self.require_permission(identity, permission, record=record)
 
         data, _ = self.schema.load(
-            data, context=dict(identity=identity, pid=record.pid, record=record)
+            data,
+            context=dict(
+                identity=identity,
+                # pid=record.pid,
+                record=record
+            )
         )
 
         # Run components
@@ -118,6 +123,9 @@ class RequestEventsService(RecordService):
         to deleted.
 
         Deleting other events is really deleting them.
+        We may want to add a parameter to assert a kind of event is deleted
+        to prevent the weird semantic of using the comments REST API to
+        delete an event (which is only possible for an admin anyway).
         """
         record = self._get_event(id_)
 
@@ -128,7 +136,7 @@ class RequestEventsService(RecordService):
         self.require_permission(identity, permission, record=record)
 
         if record.type == RequestEventType.COMMENT.value:
-            record["type"] = RequestEventType.DELETED_COMMENT.value
+            record.type = RequestEventType.DELETED_COMMENT.value
             record["content"] = ""
             record.commit()
             db.session.commit()
@@ -140,17 +148,13 @@ class RequestEventsService(RecordService):
             if self.indexer:
                 self.indexer.delete(record, refresh=True)
 
-        return self.result_item(
-            self,
-            identity,
-            record,
-            links_tpl=self.links_item_tpl,
-        )
+        # Even though we don't always completely remove the RequestEvent
+        # we return as though we did.
+        return True
 
     def search(self, identity, params=None, es_preference=None, **kwargs):
         """Search for records matching the querystring."""
         params = params or {}
-
         # Permissions
         request_id = params.get("request_id")
         request = self._get_request(request_id) if request_id else None
@@ -175,7 +179,7 @@ class RequestEventsService(RecordService):
             # links_tpl=LinksTemplate(self.config.links_search, context={
             #     "args": params
             # }),
-            # links_item_tpl=self.links_item_tpl,
+            links_item_tpl=self.links_item_tpl,
         )
 
     # Utilities

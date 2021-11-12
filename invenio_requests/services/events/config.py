@@ -10,7 +10,9 @@
 """Request Events Service Config."""
 
 from invenio_records_resources.services import RecordServiceConfig
+from invenio_records_resources.services.base.links import Link
 from invenio_records_resources.services.records.components import DataComponent
+from invenio_records_resources.services.records.results import RecordItem
 
 from ...records.api import Request, RequestEvent
 from ..permissions import PermissionPolicy
@@ -18,7 +20,29 @@ from ..schemas import RequestEventSchema
 from .customization import CustomizationConfigMixin
 
 
-class RequestEventsServiceConfig(RecordServiceConfig, CustomizationConfigMixin):
+class RequestEventItem(RecordItem):
+    """RequestEvent result item."""
+
+    @property
+    def id(self):
+        """Id property."""
+        return self._record.id
+
+
+class RequestEventLink(Link):
+    """Link variables setter for RequestEvent links."""
+
+    @staticmethod
+    def vars(record, vars):
+        """Variables for the URI template."""
+        vars.update({
+            "id": record.id,
+            "request_id": record.request_id
+        })
+
+
+class RequestEventsServiceConfig(
+        RecordServiceConfig, CustomizationConfigMixin):
     """Config."""
 
     request_cls = Request
@@ -28,3 +52,9 @@ class RequestEventsServiceConfig(RecordServiceConfig, CustomizationConfigMixin):
     components = [
         DataComponent,
     ]
+    result_item_cls = RequestEventItem
+
+    # ResultItem configurations
+    links_item = {
+        "self": RequestEventLink("{+api}/requests/{request_id}/comments/{id}"),
+    }

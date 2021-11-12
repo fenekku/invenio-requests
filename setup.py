@@ -90,7 +90,8 @@ setup(
             "invenio_requests = invenio_requests:InvenioRequests",
         ],
         "invenio_base.api_blueprints": [
-            "invenio_requests = invenio_requests.views:create_requests_bp"
+            "invenio_requests = invenio_requests.views:create_requests_bp",
+            "invenio_request_events = invenio_requests.views:create_request_events_bp"  # noqa
         ],
         "invenio_db.alembic": [
             "invenio_requests = invenio_requests:alembic",

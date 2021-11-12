@@ -16,7 +16,9 @@ fixtures are available.
 
 import pytest
 from flask_principal import Identity, Need, UserNeed
+from flask_security import login_user
 from flask_security.utils import hash_password
+from invenio_accounts.testutils import login_user_via_session
 from invenio_app.factory import create_api as _create_api
 
 from invenio_requests import current_requests
@@ -69,21 +71,6 @@ def create_app(instance_path):
     return _create_api
 
 
-@pytest.fixture()
-def example_user(app, db):
-    """Create example user."""
-    with db.session.begin_nested():
-        datastore = app.extensions["security"].datastore
-        user = datastore.create_user(
-            email="user@inveniosoftware.org",
-            password=hash_password("password"),
-            active=True,
-        )
-
-    db.session.commit()
-    return user
-
-
 @pytest.fixture(scope="module")
 def identity_simple():
     """Simple identity fixture."""
@@ -93,18 +80,70 @@ def identity_simple():
     return i
 
 
-@pytest.fixture()
+# Data layer fixtures
+@pytest.fixture(scope="module")
 def request_record_input_data():
     """Input data to a Request record."""
     return {"title": "Foo bar", "receiver": {"user": "1"}}
 
 
+# Resource layer fixtures
 @pytest.fixture()
-def example_request(db, identity_simple, request_record_input_data, example_user):
+def headers():
+    """Default headers for making requests."""
+    return {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+    }
+
+
+@pytest.fixture(scope="module")
+def users(app):
+    """Create example users."""
+    # This is a convenient way to get a handle on db that, as opposed to the
+    # fixture, won't cause a DB rollback after the test is run in order
+    # to help with test performance (creating users is a module -if not higher-
+    # concern)
+    from invenio_db import db
+    with db.session.begin_nested():
+        datastore = app.extensions["security"].datastore
+        user1 = datastore.create_user(email="user1@example.org",
+                                      password=hash_password("password"),
+                                      active=True)
+        user2 = datastore.create_user(email="user2@example.org",
+                                      password=hash_password("password"),
+                                      active=True)
+    db.session.commit()
+    return [user1, user2]
+
+
+@pytest.fixture()
+def example_user(users):
+    """Create example user."""
+    return users[0]
+
+
+@pytest.fixture()
+def example_request(identity_simple, request_record_input_data, example_user):
     """Example record."""
     # Need to use the service to get the id I guess...
+    from invenio_requests import current_requests
     requests_service = current_requests.requests_service
     item = requests_service.create(
         identity_simple, request_record_input_data, RequestType, receiver=example_user
     )
     return item._request
+
+
+@pytest.fixture()
+def client_logged_as(client, users):
+    """Logs in a user to the client."""
+
+    def log_user(user_email):
+        """Log the user."""
+        user = next((u for u in users if u.email == user_email), None)
+        login_user(user, remember=True)
+        login_user_via_session(client, email=user_email)
+        return client
+
+    return log_user
