@@ -10,8 +10,10 @@
 
 
 from invenio_access.permissions import system_process
-from invenio_db import db
 
+from ...proxies import current_requests
+from ...records.api import RequestEventFormat, RequestEventType
+from ..base import RequestAction
 
 
 class SubmitAction(RequestAction):
@@ -99,8 +101,15 @@ class DeclineAction(RequestAction):
             identity,
             request_id,
             {
-                **data,
                 "type": RequestEventType.DECLINED.value,
+            }
+        )
+        events_service.create(
+            identity,
+            request_id,
+            {
+                **data,
+                "type": RequestEventType.COMMENT.value,
             }
         )
 
@@ -126,8 +135,15 @@ class CancelAction(RequestAction):
             identity,
             request_id,
             {
-                **data,
                 "type": RequestEventType.CANCELLED.value,
+            }
+        )
+        events_service.create(
+            identity,
+            request_id,
+            {
+                **data,
+                "type": RequestEventType.COMMENT.value,
             }
         )
 

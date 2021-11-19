@@ -84,3 +84,22 @@ def test_delete_wipes_content(identity_simple, events_service_data, example_requ
         read_deleted_item_dict = read_deleted_item.to_dict()
         assert item_dict["type"] == read_deleted_item_dict["type"]
         assert "" == read_deleted_item_dict["content"]
+
+
+def test_update_keeps_type(identity_simple, events_service_data, example_request):
+    # The `update`` service method can't be used to change the type
+    events_service = current_requests.request_events_service
+    request_id = example_request.number
+    # event type is COMMENT by default
+    item = events_service.create(identity_simple, request_id, events_service_data)
+    comment_id = item.id
+    item_dict = item.to_dict()
+    data = {
+        **events_service_data,
+        "type": RequestEventType.ACCEPTED.value
+    }
+
+    updated_item = events_service.update(identity_simple, comment_id, data)
+
+    updated_item_dict = updated_item.to_dict()
+    assert item_dict["type"] == updated_item_dict["type"]

@@ -8,7 +8,10 @@
 
 """Base class for customizable actions on requests."""
 
+from invenio_db import db
+
 from ...errors import CannotExecuteActionError, NoSuchActionError
+from ...proxies import current_requests
 
 
 class RequestAction:
@@ -47,6 +50,14 @@ class RequestAction:
         As such, it can be used to index records, for instance.
         """
         pass
+
+    def _commit(self):
+        """Persist changes."""
+        self.request.commit()
+        db.session.commit()
+        requests_service = current_requests.requests_service
+        if requests_service.indexer:
+            requests_service.indexer.index(self.request)
 
 
 class RequestActions:

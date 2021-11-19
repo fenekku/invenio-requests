@@ -120,7 +120,7 @@ def test_accept_request(
 
     assert "accepted" == result_dict["status"]
     results = request_events_service.search(identity_simple_2, id_)
-    assert 2 == results.total  # submit comment + accept
+    assert 3 == results.total  # submit comment + accept + comment
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.ACCEPTED.value == h["type"]])
 
@@ -144,7 +144,7 @@ def test_cancel_request(
 
     assert "cancelled" == result_dict["status"]
     results = request_events_service.search(identity_simple, id_)
-    assert 2 == results.total  # submit comment + cancel
+    assert 3 == results.total  # submit comment + cancel + comment
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.CANCELLED.value == h["type"]])
 
@@ -168,6 +168,6 @@ def test_decline_request(
 
     assert "declined" == result_dict["status"]
     results = request_events_service.search(identity_simple, id_)
-    assert 2 == results.total  # submit comment + decline
+    assert 3 == results.total  # submit comment + decline + comment
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.DECLINED.value == h["type"]])
