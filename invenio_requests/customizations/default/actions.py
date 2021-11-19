@@ -12,9 +12,6 @@
 from invenio_access.permissions import system_process
 from invenio_db import db
 
-from ...proxies import current_requests
-from ...records.api import RequestEventFormat, RequestEventType
-from ..base import RequestAction
 
 
 class SubmitAction(RequestAction):
@@ -31,14 +28,9 @@ class SubmitAction(RequestAction):
         request_id = self.request.number
 
         # Persist request changes
-        self.request.commit()
-        db.session.commit()
-        requests_service = current_requests.requests_service
-        if requests_service.indexer:
-            requests_service.indexer.index(self.request)
+        self._commit()
 
         events_service = current_requests.request_events_service
-        # We create the comment
         events_service.create(
             identity,
             request_id,
@@ -62,21 +54,15 @@ class AcceptAction(RequestAction):
 
         request_id = self.request.number
 
-        # persist changes
-        self.request.commit()
-        db.session.commit()
-        requests_service = current_requests.requests_service
-        if requests_service.indexer:
-            requests_service.indexer.index(self.request)
+        # Persist request changes
+        self._commit()
 
-        # TODO: Add unit of work here
         events_service = current_requests.request_events_service
-        # We actually just create 2 events: one accept and one comment.
-        # This simplifies things.
         events_service.create(
             identity,
             request_id,
             {
+                **data,
                 "type": RequestEventType.ACCEPTED.value,
                 "content": "",
                 "format": RequestEventFormat.HTML.value,
@@ -103,6 +89,21 @@ class DeclineAction(RequestAction):
         """Execute the request action."""
         self.request.status = "declined"
 
+        request_id = self.request.number
+
+        # Persist request changes
+        self._commit()
+
+        events_service = current_requests.request_events_service
+        events_service.create(
+            identity,
+            request_id,
+            {
+                **data,
+                "type": RequestEventType.DECLINED.value,
+            }
+        )
+
 
 class CancelAction(RequestAction):
     """Cancel a request."""
@@ -114,6 +115,21 @@ class CancelAction(RequestAction):
     def execute(self, identity, data=None):
         """Execute the request action."""
         self.request.status = "cancelled"
+
+        request_id = self.request.number
+
+        # Persist request changes
+        self._commit()
+
+        events_service = current_requests.request_events_service
+        events_service.create(
+            identity,
+            request_id,
+            {
+                **data,
+                "type": RequestEventType.CANCELLED.value,
+            }
+        )
 
 
 class ExpireAction(RequestAction):

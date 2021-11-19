@@ -138,12 +138,10 @@ class RequestCommentsResource(RecordResource):
     @response_handler()
     def update(self):
         """Update a comment."""
-        data = deepcopy(resource_requestctx.data)
-        data["type"] = RequestEventType.COMMENT.value
         item = self.service.update(
             identity=g.identity,
             id_=resource_requestctx.view_args["comment_id"],
-            data=data,
+            data=resource_requestctx.data,
             revision_id=resource_requestctx.headers.get("if_match"),
         )
         return item.to_dict(), 200
