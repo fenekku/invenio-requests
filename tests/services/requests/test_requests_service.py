@@ -115,14 +115,54 @@ def test_accept_request(
 
     assert "accepted" == result_dict["status"]
     results = request_events_service.search(identity_simple_2, id_)
-    assert 3 == results.total
+    assert 2 == results.total  # submit comment + accept
+    hits = list(results.hits)
+    assert 1 == len([h for h in hits if RequestEventType.ACCEPTED.value == h["type"]])
 
 
-def test_cancel_request(app):
-    # TODO
-    pass
+def test_cancel_request(
+        app, identity_simple, submit_request, requests_service,
+        request_events_service):
+    # Submit a request
+    result = submit_request(identity_simple)
+    id_ = result._request.number
+
+    # Cancel it
+    data = {
+        "content": "",  # no comment is fine
+        "format": RequestEventFormat.HTML.value
+    }
+    result = requests_service.execute_action(identity_simple, id_, "cancel", data)
+    result_dict = result.to_dict()
+
+    RequestEvent.index.refresh()
+
+    assert "cancelled" == result_dict["status"]
+    results = request_events_service.search(identity_simple, id_)
+    assert 2 == results.total  # submit comment + cancel
+    hits = list(results.hits)
+    assert 1 == len([h for h in hits if RequestEventType.CANCELLED.value == h["type"]])
 
 
-def test_decline_request(app):
-    # TODO
-    pass
+def test_decline_request(
+        app, identity_simple, identity_simple_2, submit_request, requests_service,
+        request_events_service):
+    # Submit a request
+    result = submit_request(identity_simple)
+    id_ = result._request.number
+
+    # Other user declines it
+    data = {
+        "content": "Sorry but no.",
+        "format": RequestEventFormat.HTML.value
+    }
+    result = requests_service.execute_action(identity_simple_2, id_, "decline", data)
+    result_dict = result.to_dict()
+
+    RequestEvent.index.refresh()
+
+    assert "declined" == result_dict["status"]
+    results = request_events_service.search(identity_simple, id_)
+    assert 2 == results.total  # submit comment + decline
+    hits = list(results.hits)
+    assert 1 == len([h for h in hits if RequestEventType.DECLINED.value == h["type"]])

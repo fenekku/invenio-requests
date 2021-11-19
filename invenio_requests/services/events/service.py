@@ -77,20 +77,20 @@ class RequestEventsService(RecordService):
         )
 
     def update(self, identity, id_, data, revision_id=None):
-        """Replace an event."""
+        """Update an event (except for type)."""
         record = self._get_event(id_)
+        data["type"] = record.type  # this service method doesn't allow type change
 
         self.check_revision_id(record, revision_id)
 
         # Permissions
-        permission = self._get_permission("update", data["type"])
+        permission = self._get_permission("update", record.type)
         self.require_permission(identity, permission, record=record)
 
         data, _ = self.schema.load(
             data,
             context=dict(
                 identity=identity,
-                # pid=record.pid,
                 record=record
             )
         )
@@ -119,10 +119,9 @@ class RequestEventsService(RecordService):
     def delete(self, identity, id_, revision_id=None):
         """Delete an event from database and search indexes.
 
-        Deleting a comment is wiping the content and setting the type
-        to deleted.
-
+        Deleting a user facing event (any comment-like) is wiping the content.
         Deleting other events is really deleting them.
+
         We may want to add a parameter to assert a kind of event is deleted
         to prevent the weird semantic of using the comments REST API to
         delete an event (which is only possible for an admin anyway).
