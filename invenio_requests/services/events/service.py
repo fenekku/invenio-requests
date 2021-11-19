@@ -120,8 +120,9 @@ class RequestEventsService(RecordService):
     def delete(self, identity, id_, revision_id=None):
         """Delete an event from database and search indexes.
 
-        Deleting a user facing event (any comment-like) is wiping the content.
-        Deleting other events is really deleting them.
+        Deleting a comment is wiping the content and marking it deleted.
+        Deleting an accepted/cancelled/declined is just wiping the content.
+        Deleting another event is really deleting them.
 
         We may want to add a parameter to assert a kind of event is deleted
         to prevent the weird semantic of using the comments REST API to
@@ -135,9 +136,11 @@ class RequestEventsService(RecordService):
         permission = self._get_permission("delete", record.type)
         self.require_permission(identity, permission, record=record)
 
-        if record.type == RequestEventType.COMMENT.value:
-            record.type = RequestEventType.REMOVED.value
+        comment_like = ["COMMENT", "ACCEPTED", "DECLINED", "CANCELLED"]
+        if record.type in (getattr(RequestEventType, c).value for c in comment_like):
             record["content"] = ""
+            if record.type == RequestEventType.COMMENT.value:
+                record.type = RequestEventType.REMOVED.value
             record.commit()
             db.session.commit()
             if self.indexer:

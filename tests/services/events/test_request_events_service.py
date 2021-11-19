@@ -62,3 +62,25 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
         page=1,
     )
     assert 2 == searched_items.total
+
+
+def test_delete_wipes_content(identity_simple, events_service_data, example_request):
+    # Deleting a regular comment empties content and changes type (tested above)
+    # Deleting an accept/decline/cancel event just wipes their content
+    events_service = current_requests.request_events_service
+    request_id = example_request.number
+    types = ["ACCEPTED", "DECLINED", "CANCELLED"]
+
+    for typ in types:
+        type_value = getattr(RequestEventType, typ).value
+        events_service_data["type"] = type_value
+        item = events_service.create(identity_simple, request_id, events_service_data)
+        item_dict = item.to_dict()
+        comment_id = item.id
+
+        events_service.delete(identity_simple, comment_id)
+
+        read_deleted_item = events_service.read(identity_simple, comment_id)
+        read_deleted_item_dict = read_deleted_item.to_dict()
+        assert item_dict["type"] == read_deleted_item_dict["type"]
+        assert "" == read_deleted_item_dict["content"]
