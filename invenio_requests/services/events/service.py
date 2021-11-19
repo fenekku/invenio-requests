@@ -11,6 +11,7 @@
 
 from invenio_db import db
 from invenio_records_resources.services import RecordService
+from invenio_records_resources.services.base.links import LinksTemplate
 
 from ...records.api import RequestEventType
 
@@ -180,9 +181,9 @@ class RequestEventsService(RecordService):
             identity,
             search_result,
             params,
-            # links_tpl=LinksTemplate(self.config.links_search, context={
-            #     "args": params
-            # }),
+            links_tpl=LinksTemplate(self.config.links_search, context={
+                "request_id": request_id, "args": params
+            }),
             links_item_tpl=self.links_item_tpl,
         )
 

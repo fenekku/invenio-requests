@@ -8,10 +8,12 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 """Request Events Service Config."""
+from functools import partial
 
 from invenio_records_resources.services import RecordServiceConfig
 from invenio_records_resources.services.base.links import Link
 from invenio_records_resources.services.records.components import DataComponent
+from invenio_records_resources.services.records.links import pagination_links
 from invenio_records_resources.services.records.results import RecordItem
 
 from ...records.api import Request, RequestEvent
@@ -54,3 +56,4 @@ class RequestEventsServiceConfig(RecordServiceConfig, CustomizationConfigMixin):
     links_item = {
         "self": RequestEventLink("{+api}/requests/{request_id}/comments/{id}"),
     }
+    links_search = pagination_links("{+api}/requests/{request_id}/timeline{?args*}")

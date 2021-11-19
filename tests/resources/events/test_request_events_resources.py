@@ -15,8 +15,8 @@ from invenio_requests.records.api import RequestEvent, RequestEventType
 
 
 def assert_api_response_json(expected_json, received_json):
-    """Assert the REST API response's json."""
-    # We don't compare dynamic times at this point
+    """Assert the REST API response"s json."""
+    # We don"t compare dynamic times at this point
     received_json.pop("created")
     received_json.pop("updated")
     assert expected_json == received_json
@@ -36,7 +36,9 @@ def test_simple_comment_flow(
 
     # User 1 comments
     response = client.post(
-        f"/requests/{request_id}/comments", headers=headers, json=events_resource_data
+        f"/requests/{request_id}/comments",
+        headers=headers,
+        json=events_resource_data
     )
 
     comment_id = response.json["id"]
@@ -64,7 +66,9 @@ def test_simple_comment_flow(
     # User 2 comments
     client = client_logged_as("user2@example.org")
     response = client.post(
-        f"/requests/{request_id}/comments", headers=headers, json=events_resource_data
+        f"/requests/{request_id}/comments",
+        headers=headers,
+        json=events_resource_data
     )
     comment_id = response.json["id"]
     revision_id = response.json["revision_id"]
@@ -105,7 +109,10 @@ def test_simple_comment_flow(
     RequestEvent.index.refresh()
 
     # User 2 gets the timeline (will be sorted)
-    response = client.get(f"/requests/{request_id}/timeline", headers=headers)
+    response = client.get(
+        f"/requests/{request_id}/timeline",
+        headers=headers
+    )
     assert 200 == response.status_code
     assert 2 == response.json["hits"]["total"]
     assert_api_response_json(expected_json_1, response.json["hits"]["hits"][0])
@@ -120,3 +127,24 @@ def test_simple_comment_flow(
         "type": RequestEventType.REMOVED.value,
     }
     assert_api_response_json(expected_json_3, response.json["hits"]["hits"][1])
+
+
+def test_timeline_links(
+        client_logged_as, events_resource_data, example_request, headers):
+    """Tests the links for the timeline (search) endpoint."""
+    client = client_logged_as("user1@example.org")
+    request_id = example_request.id
+    response = client.post(
+        f"/requests/{request_id}/comments",
+        headers=headers,
+        json=events_resource_data
+    )
+
+    response = client.get(f"/requests/{request_id}/timeline", headers=headers)
+    search_record_links = response.json["links"]
+
+    expected_links = {
+        # NOTE: Variations are covered in records-resources
+        "self": f"https://127.0.0.1:5000/api/requests/{request_id}/timeline?page=1&size=25&sort=oldest"  # noqa
+    }
+    assert expected_links == search_record_links
