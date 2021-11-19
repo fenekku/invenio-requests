@@ -180,9 +180,9 @@ class RequestEventsService(RecordService):
             identity,
             search_result,
             params,
-            # links_tpl=LinksTemplate(self.config.links_search, context={
-            #     "args": params
-            # }),
+            links_tpl=LinksTemplate(self.config.links_search, context={
+                "request_id": request_id, "args": params
+            }),
             links_item_tpl=self.links_item_tpl,
         )
 

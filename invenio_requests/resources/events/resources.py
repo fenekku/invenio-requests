@@ -170,10 +170,10 @@ class RequestCommentsResource(RecordResource):
         Its primary purpose is as a batch read of events i.e. the timeline.
         """
         params = deepcopy(resource_requestctx.args)
-        params["request_id"] = resource_requestctx.view_args["request_id"]
         params.setdefault("sort", "oldest")
         hits = self.service.search(
             identity=g.identity,
+            request_id=resource_requestctx.view_args["request_id"],
             params=params,
             es_preference=es_preference(),
         )
