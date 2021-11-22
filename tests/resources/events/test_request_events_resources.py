@@ -15,8 +15,8 @@ from invenio_requests.records.api import RequestEvent, RequestEventType
 
 
 def assert_api_response_json(expected_json, received_json):
-    """Assert the REST API response"s json."""
-    # We don"t compare dynamic times at this point
+    """Assert the REST API response's json."""
+    # We don't compare dynamic times at this point
     received_json.pop("created")
     received_json.pop("updated")
     assert expected_json == received_json
