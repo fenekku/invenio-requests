@@ -155,6 +155,9 @@ class RequestEvent(Record):
     # Systemfields
     metadata = None
 
+    schema = ConstantField("$schema", "local://request_events/event-v1.0.0.json")
+    """The JSON Schema to use for validation."""
+
     request = ModelField(dump=False)
     """The request."""
 

@@ -15,7 +15,8 @@ TODO explain what can be done here, and how!
 
 from uuid import uuid4
 
-from ..base import RequestSchema, RequestType
+from ...services.schemas import RequestSchema
+from ..base import RequestType
 from .actions import (
     AcceptAction,
     CancelAction,

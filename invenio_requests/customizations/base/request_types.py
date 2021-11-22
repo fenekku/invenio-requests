@@ -15,8 +15,6 @@ TODO explain what can be done here, and how!
 
 from uuid import uuid4
 
-from .schema import RequestSchema
-
 
 class RequestType:
     """Base class for custom request types."""
@@ -63,7 +61,7 @@ class RequestType:
     argument.
     """
 
-    marshmallow_schema = RequestSchema
+    marshmallow_schema = None
     """Schema used for de/serialization of requests of this type.
 
     To be overridden in subclasses, if the custom request type follows a

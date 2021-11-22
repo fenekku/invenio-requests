@@ -64,10 +64,7 @@ class AcceptAction(RequestAction):
             identity,
             request_id,
             {
-                **data,
                 "type": RequestEventType.ACCEPTED.value,
-                "content": "",
-                "format": RequestEventFormat.HTML.value,
             },
         )
         events_service.create(

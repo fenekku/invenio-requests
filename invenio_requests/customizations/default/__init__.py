@@ -8,7 +8,6 @@
 
 """Invenio module for generic and customizable requests."""
 
-from ..base import RequestSchema
 from .actions import (
     AcceptAction,
     CancelAction,
@@ -20,7 +19,6 @@ from .request_types import DefaultRequestType
 
 __all__ = (
     "DefaultRequestType",
-    "RequestSchema",
     "AcceptAction",
     "CancelAction",
     "DeclineAction",

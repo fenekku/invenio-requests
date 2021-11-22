@@ -30,8 +30,7 @@ class RequestEventsService(RecordService):
         permission = self._get_permission("create", data["type"])
         self.require_permission(identity, permission, request=request)
 
-        # Validate data and create record with pid
-        # (if there are errors, .load() raises)
+        # Validate data (if there are errors, .load() raises)
         data, errors = self.schema.load(
             data,
             context={"identity": identity},
@@ -93,8 +92,8 @@ class RequestEventsService(RecordService):
             data,
             context=dict(
                 identity=identity,
-                record=record
-            )
+                record=record,
+            ),
         )
 
         # Run components
@@ -137,17 +136,15 @@ class RequestEventsService(RecordService):
         permission = self._get_permission("delete", record.type)
         self.require_permission(identity, permission, record=record)
 
-        comment_like = ["COMMENT", "ACCEPTED", "DECLINED", "CANCELLED"]
-        if record.type in (getattr(RequestEventType, c).value for c in comment_like):
-            record["content"] = ""
-            if record.type == RequestEventType.COMMENT.value:
-                record.type = RequestEventType.REMOVED.value
+        if record.type == RequestEventType.COMMENT.value:
+            record["payload"]["content"] = ""
+            record.type = RequestEventType.REMOVED.value
             record.commit()
             db.session.commit()
             if self.indexer:
                 self.indexer.index(record, refresh=True)
         else:
-            record.delete()
+            record.delete(force=True)
             db.session.commit()
             if self.indexer:
                 self.indexer.delete(record, refresh=True)

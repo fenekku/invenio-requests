@@ -70,8 +70,10 @@ def submit_request(create_request, requests_service):
         request = create_request(identity)
         id_ = request.number
         data = data or {
-            "content": "Can I belong to the community?",
-            "format": RequestEventFormat.HTML.value,
+            "payload": {
+                "content": "Can I belong to the community?",
+                "format": RequestEventFormat.HTML.value,
+            }
         }
         return requests_service.execute_action(identity, id_, "submit", data)
 
@@ -93,7 +95,7 @@ def test_submit_request(app, identity_simple, submit_request, request_events_ser
     assert 1 == results.total
     hits = list(results.hits)
     assert RequestEventType.COMMENT.value == hits[0]["type"]
-    assert "Can I belong to the community?" == hits[0]["content"]
+    assert "Can I belong to the community?" == hits[0]["payload"]["content"]
 
 
 def test_accept_request(
@@ -110,8 +112,10 @@ def test_accept_request(
 
     # Other user accepts it with comment
     data = {
-        "content": "Welcome to the community!",
-        "format": RequestEventFormat.HTML.value,
+        "payload": {
+            "content": "Welcome to the community!",
+            "format": RequestEventFormat.HTML.value,
+        }
     }
     result = requests_service.execute_action(identity_simple_2, id_, "accept", data)
     result_dict = result.to_dict()
@@ -134,8 +138,10 @@ def test_cancel_request(
 
     # Cancel it
     data = {
-        "content": "",  # no comment is fine
-        "format": RequestEventFormat.HTML.value
+        "payload": {
+            "content": "",  # no comment is fine
+            "format": RequestEventFormat.HTML.value
+        }
     }
     result = requests_service.execute_action(identity_simple, id_, "cancel", data)
     result_dict = result.to_dict()
@@ -158,8 +164,10 @@ def test_decline_request(
 
     # Other user declines it
     data = {
-        "content": "Sorry but no.",
-        "format": RequestEventFormat.HTML.value
+        "payload": {
+            "content": "Sorry but no.",
+            "format": RequestEventFormat.HTML.value
+        }
     }
     result = requests_service.execute_action(identity_simple_2, id_, "decline", data)
     result_dict = result.to_dict()

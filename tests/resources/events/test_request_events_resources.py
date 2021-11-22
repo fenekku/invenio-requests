@@ -75,7 +75,7 @@ def test_simple_comment_flow(
 
     # User 2 updates comments
     data = copy.deepcopy(events_resource_data)
-    data["content"] = "I've revised my comment."
+    data["payload"]["content"] = "I've revised my comment."
     revision_headers = copy.deepcopy(headers)
     revision_headers["if_match"] = revision_id
     response = client.put(
@@ -84,8 +84,7 @@ def test_simple_comment_flow(
         json=data,
     )
     expected_json_2 = {
-        **events_resource_data,
-        "content": data["content"],
+        **data,
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa
@@ -117,8 +116,6 @@ def test_simple_comment_flow(
     assert 2 == response.json["hits"]["total"]
     assert_api_response_json(expected_json_1, response.json["hits"]["hits"][0])
     expected_json_3 = {
-        "content": "",
-        "format": "html",
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa

@@ -20,6 +20,8 @@ def events_service_data():
     """Input data for the Request Events Service."""
     return {
         "type": RequestEventType.COMMENT.value,
-        "content": "This is a comment.",
-        "format": RequestEventFormat.HTML.value,
+        "payload": {
+            "content": "This is a comment.",
+            "format": RequestEventFormat.HTML.value,
+        }
     }

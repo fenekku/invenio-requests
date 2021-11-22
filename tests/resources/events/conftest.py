@@ -19,6 +19,8 @@ from invenio_requests.records.api import RequestEventFormat
 def events_resource_data():
     """Input data for the Request Events Resource (REST body)."""
     return {
-        "content": "This is a comment.",
-        "format": RequestEventFormat.HTML.value,
+        "payload": {
+            "content": "This is a comment.",
+            "format": RequestEventFormat.HTML.value,
+        }
     }

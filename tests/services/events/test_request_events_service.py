@@ -10,8 +10,22 @@
 """Service tests."""
 import copy
 
+import pytest
+from invenio_access.permissions import system_identity
+from marshmallow import ValidationError
+from sqlalchemy.orm.exc import NoResultFound
+
 from invenio_requests.proxies import current_requests
 from invenio_requests.records.api import RequestEvent, RequestEventType
+
+
+def test_schemas(app, events_service_data, example_request):
+    events_service = current_requests.request_events_service
+    request_id = example_request.number
+    events_service_data["type"] = "INVALID"
+
+    with pytest.raises(ValidationError):
+        events_service.create(system_identity, request_id, events_service_data)
 
 
 def test_simple_flow(app, identity_simple, events_service_data, example_request):
@@ -23,8 +37,10 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
     item = events_service.create(identity_simple, request_id, events_service_data)
     item_dict = item.to_dict()
     assert events_service_data["type"] == item_dict["type"]
-    assert events_service_data["content"] == item_dict["content"]
-    assert events_service_data["format"] == item_dict["format"]
+    assert events_service_data["payload"] == {
+        "content": item_dict["payload"]["content"],
+        "format": item_dict["payload"]["format"],
+    }
     id_ = item.id
 
     # Read it
@@ -34,10 +50,10 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
 
     # Update it
     data = read_item.to_dict()  # should be equivalent to events_service_data
-    data["content"] = "An edited comment"
-    updated_item = events_service.update(identity_simple, id_, data)
+    data["payload"]["content"] = "An edited comment"
+    updated_item = events_service.update(identity_simple, id_, data)  # STOPPED HERE
     assert id_ == updated_item.id
-    assert "An edited comment" == updated_item.to_dict()["content"]
+    assert "An edited comment" == updated_item.to_dict()["payload"]["content"]
 
     # Delete it
     deleted_item = events_service.delete(identity_simple, id_)
@@ -50,7 +66,7 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
     # Search (batch read) events
     # first add another comment
     data = copy.deepcopy(events_service_data)
-    data["content"] = "Another comment."
+    data["payload"]["content"] = "Another comment."
     item2 = events_service.create(identity_simple, request_id, data)
     # Refresh to make changes live
     RequestEvent.index.refresh()
@@ -64,26 +80,22 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
     assert 2 == searched_items.total
 
 
-def test_delete_wipes_content(identity_simple, events_service_data, example_request):
+def test_delete_non_comment(events_service_data, example_request):
     # Deleting a regular comment empties content and changes type (tested above)
-    # Deleting an accept/decline/cancel event just wipes their content
+    # Deleting an accept/decline/cancel event removes them
     events_service = current_requests.request_events_service
     request_id = example_request.number
-    types = ["ACCEPTED", "DECLINED", "CANCELLED"]
+    del events_service_data["payload"]
 
-    for typ in types:
-        type_value = getattr(RequestEventType, typ).value
-        events_service_data["type"] = type_value
-        item = events_service.create(identity_simple, request_id, events_service_data)
-        item_dict = item.to_dict()
+    for typ in (t for t in RequestEventType if t != RequestEventType.COMMENT):
+        events_service_data["type"] = typ.value
+        item = events_service.create(system_identity, request_id, events_service_data)
         comment_id = item.id
 
-        events_service.delete(identity_simple, comment_id)
+        events_service.delete(system_identity, comment_id)
 
-        read_deleted_item = events_service.read(identity_simple, comment_id)
-        read_deleted_item_dict = read_deleted_item.to_dict()
-        assert item_dict["type"] == read_deleted_item_dict["type"]
-        assert "" == read_deleted_item_dict["content"]
+        with pytest.raises(NoResultFound):
+            events_service.read(system_identity, comment_id)
 
 
 def test_update_keeps_type(identity_simple, events_service_data, example_request):

@@ -7,10 +7,11 @@
 
 """Base classes for requests in Invenio."""
 
-from .api import Request
+from .api import Request, RequestEvent
 from .models import RequestMetadata
 
 __all__ = (
     "Request",
+    "RequestEvent",
     "RequestMetadata",
 )

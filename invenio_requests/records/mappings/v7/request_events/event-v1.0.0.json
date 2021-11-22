@@ -30,11 +30,9 @@
       "request_id": {
         "type": "keyword"
       },
-      "content": {
-        "type": "text"
-      },
-      "format": {
-        "type": "keyword"
+      "payload": {
+        "type": "object",
+        "enabled": false
       }
     }
   }

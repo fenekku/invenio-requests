@@ -10,11 +10,9 @@
 
 from .actions import RequestAction, RequestActions
 from .request_types import RequestType
-from .schema import RequestSchema
 
 __all__ = (
     "RequestAction",
     "RequestActions",
     "RequestType",
-    "RequestSchema",
 )
