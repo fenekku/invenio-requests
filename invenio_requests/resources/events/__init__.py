@@ -10,7 +10,8 @@
 
 """Request Events Resource module."""
 
-from .resources import RequestCommentsResource, RequestCommentsResourceConfig
+from .config import RequestCommentsResourceConfig
+from .resources import RequestCommentsResource
 
 __all__ = (
     "RequestCommentsResource",

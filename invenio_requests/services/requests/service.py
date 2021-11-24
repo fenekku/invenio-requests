@@ -211,7 +211,7 @@ class RequestsService(RecordService):
                 identity, request.id, {"type": event_type}, uow=uow
             )
 
-        # Create comment if comment was provided
+        # Assuming that data is just for comment payload
         if data:
             comment_type = RequestEventType.COMMENT.value
             current_events_service.create(

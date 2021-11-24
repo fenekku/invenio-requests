@@ -39,7 +39,7 @@ class Creator(Generator):
     def query_filter(self, identity=None, **kwargs):
         """Filters for current identity as owner."""
         # TODO when request is more fleshed out
-        return []
+        return Q('match_all')
 
 
 class Receiver(Generator):
@@ -106,9 +106,9 @@ class PermissionPolicy(RecordPermissionPolicy):
     can_expire = [SystemProcess()]
 
     # Request Events: Comments
-    can_create_event_comment = [Creator(), Receiver(), SystemProcess()]
-    can_update_event_comment = [Commenter(), SystemProcess()]
-    can_delete_event_comment = [Commenter(), Receiver(), SystemProcess()]
+    can_create_comment = [Creator(), Receiver(), SystemProcess()]
+    can_update_comment = [Commenter(), SystemProcess()]
+    can_delete_comment = [Commenter(), Receiver(), SystemProcess()]
 
     # Request Events: All other events
     can_create_event = [AnyUser(), SystemProcess()]

@@ -8,7 +8,6 @@
 # details.
 
 """Service tests."""
-import copy
 
 import pytest
 from flask_principal import Identity, Need, UserNeed

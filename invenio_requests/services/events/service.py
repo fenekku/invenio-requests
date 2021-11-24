@@ -28,7 +28,7 @@ class RequestEventsService(RecordService):
     def create(self, identity, request_id, data, uow=None):
         """Create a request event.
 
-        :param request_id: Identifier of the request.
+        :param request_id: Identifier of the request (data-layer id).
         :param identity: Identity of user creating the event.
         :param dict data: Input data according to the data schema.
         """
@@ -157,9 +157,11 @@ class RequestEventsService(RecordService):
     ):
         """Search for events (optionally of request_id) matching the querystring."""
         params = params or {}
+        params.setdefault("sort", "oldest")
+
         # Permissions
         request = self._get_request(request_id) if request_id else None
-        self.require_permission(identity, "search", request=request)
+        self.require_permission(identity, "search_event", request=request)
 
         # Prepare and execute the search
         search = self._search(
@@ -197,7 +199,7 @@ class RequestEventsService(RecordService):
         Needed to distinguish between kinds of events.
         """
         if event_type == RequestEventType.COMMENT.value:
-            return f"{action}_event_comment"
+            return f"{action}_comment"
         elif event_type == RequestEventType.ACCEPTED.value:
             return "accept"
         elif event_type == RequestEventType.DECLINED.value:

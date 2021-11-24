@@ -13,10 +13,6 @@ from copy import deepcopy
 
 from flask import g
 from flask_resources import (
-    JSONDeserializer,
-    JSONSerializer,
-    RequestBodyParser,
-    ResponseHandler,
     from_conf,
     request_body_parser,
     request_parser,
@@ -24,51 +20,11 @@ from flask_resources import (
     response_handler,
     route,
 )
-from invenio_records_resources.resources import (
-    RecordResource,
-    RecordResourceConfig,
-    SearchRequestArgsSchema,
-)
-from invenio_records_resources.resources.records.headers import etag_headers
+from invenio_records_resources.resources import RecordResource
 from invenio_records_resources.resources.records.resource import request_headers
 from invenio_records_resources.resources.records.utils import es_preference
-from marshmallow import fields
 
 from ...records.api import RequestEventType
-
-
-#
-# Resource config
-#
-class RequestCommentsResourceConfig(RecordResourceConfig):
-    """Request Events resource configuration."""
-
-    blueprint_name = "request_events"
-    url_prefix = "/requests"
-    routes = {
-        "list": "/<request_id>/comments",
-        "item": "/<request_id>/comments/<comment_id>",
-        "timeline": "/<request_id>/timeline",
-    }
-
-    # Input
-    # WARNING: These "request_*" values have nothing to do with the
-    #          "Request" of "RequestEvent". They are related to the Flask
-    #          request.
-    request_list_view_args = {
-        "request_id": fields.Str(),
-    }
-    request_item_view_args = {
-        "request_id": fields.Str(),
-        "comment_id": fields.Str(),
-    }
-    request_search_args = SearchRequestArgsSchema
-    request_body_parsers = {"application/json": RequestBodyParser(JSONDeserializer())}
-
-    # Ouput
-    response_handlers = {
-        "application/json": ResponseHandler(JSONSerializer(), headers=etag_headers),
-    }
 
 
 #
@@ -165,12 +121,10 @@ class RequestCommentsResource(RecordResource):
 
         Its primary purpose is as a batch read of events i.e. the timeline.
         """
-        params = deepcopy(resource_requestctx.args)
-        params.setdefault("sort", "oldest")
         hits = self.service.search(
             identity=g.identity,
             request_id=resource_requestctx.view_args["request_id"],
-            params=params,
+            params=resource_requestctx.args,
             es_preference=es_preference(),
         )
         return hits.to_dict(), 200
