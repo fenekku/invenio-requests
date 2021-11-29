@@ -129,13 +129,15 @@ class CommentSchema(BaseEventSchema):
     class CommentExtra(Schema):
         """Comment extras schema."""
 
-        content = utils_fields.SanitizedHTML()
+        content = utils_fields.SanitizedHTML(
+            required=True, validate=validate.Length(min=1)
+        )
         format = fields.Str(
             validate=validate.OneOf(choices=[e.value for e in RequestEventFormat]),
             load_default=RequestEventFormat.HTML.value,
         )
 
-    payload = fields.Nested(CommentExtra)
+    payload = fields.Nested(CommentExtra, required=True)
 
 
 class NoExtrasSchema(BaseEventSchema):

@@ -12,6 +12,7 @@ import pytest
 from invenio_access.permissions import system_identity as sys_id
 
 from invenio_requests.customizations.default import DefaultRequestType
+from invenio_requests.records.api import RequestEventFormat
 
 
 @pytest.fixture()
@@ -33,7 +34,16 @@ def example_requests(app, users):
     # this is needed to make sure that the requests are indexed in time,
     # before the tests are run
     req1.index.refresh()
-    req2.index.refresh()
-    req3.index.refresh()
 
     return [req1, req2, req3]
+
+
+@pytest.fixture()
+def request_action_resource_data():
+    """REST API input fixture."""
+    return {
+        "payload": {
+            "content": "Action comment.",
+            "format": RequestEventFormat.HTML.value
+        }
+    }

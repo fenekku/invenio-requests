@@ -8,6 +8,8 @@
 
 """Request resource tests."""
 
+import copy
+
 
 def check_reference_search_filter_results(response, expected_hits, expected_req_nums):
     """Check if all expected results are there."""
@@ -67,3 +69,36 @@ def test_reference_search_filters(app, client_logged_as, headers, example_reques
     check_reference_search_filter_results(
         response, 3, [req1.number, req2.number, req3.number]
     )
+
+
+def test_empty_comment(
+    app, client_logged_as, headers, example_requests, request_action_resource_data
+):
+    client = client_logged_as("user1@example.org")
+    r1, r2, r3 = example_requests
+    for r in [r1, r2, r3]:
+        r.status = "open"
+        r.commit()
+
+    # Accept (valid for other actions too) no payload is Ok
+    response = client.post(f"/requests/{r1.id}/actions/accept", headers=headers)
+    assert 200 == response.status_code
+    assert "accepted" == response.json["status"]
+
+    # Accept {} is Ok
+    response = client.post(
+        f"/requests/{r2.id}/actions/accept", headers=headers, json={}
+    )
+    assert 200 == response.status_code
+    assert "accepted" == response.json["status"]
+
+    # Accept empty content is an error
+    data = copy.deepcopy(request_action_resource_data)
+    data["payload"]["content"] = ""
+    response = client.post(
+        f"/requests/{r3.id}/actions/accept", headers=headers, json=data
+    )
+    assert 400 == response.status_code
+
+    response = client.get(f"/requests/{r3.id}", headers=headers)
+    assert "open" == response.json["status"]

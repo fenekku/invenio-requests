@@ -135,21 +135,15 @@ def test_cancel_request(
     result = submit_request(identity_simple)
     id_ = result._request.number
 
-    # Cancel it
-    data = {
-        "payload": {
-            "content": "",  # no comment is fine
-            "format": RequestEventFormat.HTML.value
-        }
-    }
-    result = requests_service.execute_action(identity_simple, id_, "cancel", data)
+    # Cancel it  (no comment is fine)
+    result = requests_service.execute_action(identity_simple, id_, "cancel")
     result_dict = result.to_dict()
 
     RequestEvent.index.refresh()
 
     assert "cancelled" == result_dict["status"]
     results = request_events_service.search(identity_simple, id_)
-    assert 3 == results.total  # submit comment + cancel + comment
+    assert 2 == results.total  # submit comment + cancel
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.CANCELLED.value == h["type"]])
 

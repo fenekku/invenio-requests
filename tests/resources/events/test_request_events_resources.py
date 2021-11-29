@@ -137,3 +137,69 @@ def test_timeline_links(
         "self": f"https://127.0.0.1:5000/api/requests/{request_id}/timeline?page=1&size=25&sort=oldest"  # noqa
     }
     assert expected_links == search_record_links
+
+
+def test_empty_comment(
+    app, client_logged_as, headers, events_resource_data, example_request
+):
+    client = client_logged_as("user1@example.org")
+    request_id = example_request.id
+
+    # Comment no payload is an error
+    response = client.post(f"/requests/{request_id}/comments", headers=headers)
+
+    expected_json = {
+        "errors": [
+            {
+                "field": "payload",
+                "messages": [
+                    "Missing data for required field."
+                ]
+            }
+        ],
+        "message": "A validation error occurred.",
+        "status": 400
+    }
+    assert 400 == response.status_code
+    assert expected_json == response.json
+
+    # Comment {} is an error
+    response = client.post(
+        f"/requests/{request_id}/comments", headers=headers, json={}
+    )
+    assert 400 == response.status_code
+    assert expected_json == response.json
+
+    # Comment empty content is an error
+    data = copy.deepcopy(events_resource_data)
+    data["payload"]["content"] = ""
+    response = client.post(
+        f"/requests/{request_id}/comments", headers=headers, json=data
+    )
+    assert 400 == response.status_code
+    expected_json = {
+        **expected_json,
+        "errors": [
+            {
+                "field": "payload.content",
+                "messages": [
+                    "Shorter than minimum length 1."
+                ]
+            }
+        ]
+    }
+    assert expected_json == response.json
+
+    # Update with empty comment is an error
+    # (first create one correctly)
+    data["payload"]["content"] = "This is a comment."
+    response = client.post(
+        f"/requests/{request_id}/comments", headers=headers, json=data
+    )
+    comment_id = response.json["id"]
+    data["payload"]["content"] = ""
+    response = client.put(
+        f"/requests/{request_id}/comments/{comment_id}", headers=headers, json=data
+    )
+    assert 400 == response.status_code
+    assert expected_json == response.json

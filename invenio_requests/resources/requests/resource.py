@@ -85,13 +85,16 @@ class RequestsResource(RecordResource):
         )
         return "", 204
 
-    @request_headers
     @request_view_args
+    @request_headers
+    @request_data
+    @response_handler()
     def execute_action(self):
         """Execute action."""
         item = self.service.execute_action(
-            action=resource_requestctx.view_args["action"],
-            id_=resource_requestctx.view_args["id"],
             identity=g.identity,
+            id_=resource_requestctx.view_args["id"],
+            action=resource_requestctx.view_args["action"],
+            data=resource_requestctx.data
         )
         return item.to_dict(), 200

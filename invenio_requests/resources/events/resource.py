@@ -64,8 +64,8 @@ class RequestCommentsResource(RecordResource):
     @data_parser
     @response_handler()
     def create(self):
-        """Create an event."""
-        data = deepcopy(resource_requestctx.data)
+        """Create a comment."""
+        data = deepcopy(resource_requestctx.data) if resource_requestctx.data else {}
         data["type"] = RequestEventType.COMMENT.value
         item = self.service.create(
             identity=g.identity,
