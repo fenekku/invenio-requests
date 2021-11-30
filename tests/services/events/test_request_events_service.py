@@ -28,7 +28,8 @@ def test_schemas(app, events_service_data, example_request):
         events_service.create(system_identity, request_id, events_service_data)
 
 
-def test_simple_flow(app, identity_simple, events_service_data, example_request):
+def test_simple_flow(
+        app, identity_simple, events_service_data, example_request):
     """Interact with comment events."""
     events_service = current_requests.request_events_service
     request_id = example_request.id
@@ -51,7 +52,7 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
     # Update it
     data = read_item.to_dict()  # should be equivalent to events_service_data
     data["payload"]["content"] = "An edited comment"
-    updated_item = events_service.update(identity_simple, id_, data)  # STOPPED HERE
+    updated_item = events_service.update(identity_simple, id_, data)
     assert id_ == updated_item.id
     assert "An edited comment" == updated_item.to_dict()["payload"]["content"]
 
@@ -80,22 +81,24 @@ def test_simple_flow(app, identity_simple, events_service_data, example_request)
     assert 2 == searched_items.total
 
 
-def test_delete_non_comment(events_service_data, example_request):
+def test_delete_non_comment(
+        events_service_data, example_request, request_events_service):
     # Deleting a regular comment empties content and changes type (tested above)
     # Deleting an accept/decline/cancel event removes them
-    events_service = current_requests.request_events_service
     request_id = example_request.number
     del events_service_data["payload"]
 
     for typ in (t for t in RequestEventType if t != RequestEventType.COMMENT):
         events_service_data["type"] = typ.value
-        item = events_service.create(system_identity, request_id, events_service_data)
-        comment_id = item.id
+        item = request_events_service.create(
+            system_identity, request_id, events_service_data
+        )
+        event_id = item.id
 
-        events_service.delete(system_identity, comment_id)
+        request_events_service.delete(system_identity, event_id)
 
         with pytest.raises(NoResultFound):
-            events_service.read(system_identity, comment_id)
+            request_events_service.read(system_identity, event_id)
 
 
 def test_update_keeps_type(identity_simple, events_service_data, example_request):

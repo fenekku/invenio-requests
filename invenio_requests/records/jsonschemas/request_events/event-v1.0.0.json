@@ -7,17 +7,20 @@
     "$schema": {
       "$ref": "local://definitions-v1.0.0.json#/$schema"
     },
+    "created_by": {
+      "$ref": "local://requests/definitions-v1.0.0.json#/entity_reference"
+    },
     "id": {
       "$ref": "local://definitions-v1.0.0.json#/identifier"
+    },
+    "payload": {
+      "$ref": "local://requests/definitions-v1.0.0.json#/anything"
     },
     "request_id": {
       "$ref": "local://definitions-v1.0.0.json#/identifier"
     },
     "type": {
       "type": "string"
-    },
-    "payload": {
-      "$ref": "local://requests/definitions-v1.0.0.json#/anything"
     }
   }
 }

@@ -82,6 +82,24 @@ def identity_simple():
     return i
 
 
+@pytest.fixture(scope="module")
+def identity_simple_2():
+    """Another simple identity fixture."""
+    i = Identity(2)
+    i.provides.add(UserNeed(2))
+    i.provides.add(Need(method="system_role", value="any_user"))
+    return i
+
+
+@pytest.fixture(scope="module")
+def identity_stranger():
+    """An unrelated user identity fixture."""
+    i = Identity(4)
+    i.provides.add(UserNeed(4))
+    i.provides.add(Need(method="system_role", value="any_user"))
+    return i
+
+
 # Data layer fixtures
 @pytest.fixture(scope="module")
 def request_record_input_data():

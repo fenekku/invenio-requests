@@ -17,6 +17,7 @@ from invenio_records_resources.services.records.results import RecordItem
 
 from ...records.api import Request, RequestEvent
 from ..permissions import PermissionPolicy
+from ..requests.components import EntityReferencesComponent
 from ..schemas import RequestEventSchema
 from .customization import CustomizationConfigMixin
 
@@ -48,6 +49,7 @@ class RequestEventsServiceConfig(RecordServiceConfig, CustomizationConfigMixin):
     record_cls = RequestEvent
     components = [
         DataComponent,
+        EntityReferencesComponent,  # only used for created_by
     ]
     result_item_cls = RequestEventItem
 

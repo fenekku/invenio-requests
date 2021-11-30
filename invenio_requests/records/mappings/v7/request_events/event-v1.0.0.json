@@ -18,6 +18,10 @@
         "type": "keyword"
       },
 
+      "created_by": {
+        "type": "object",
+        "dynamic": true
+      },
       "id": {
         "type": "keyword"
       },

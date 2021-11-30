@@ -10,86 +10,19 @@
 """Service tests."""
 
 import pytest
-from flask_principal import Identity, Need, UserNeed
 from invenio_records_resources.services.errors import PermissionDeniedError
 
-from invenio_requests.customizations import DefaultRequestType
-from invenio_requests.proxies import current_requests
 from invenio_requests.records.api import (
     RequestEvent,
     RequestEventFormat,
     RequestEventType,
 )
 
-# Convenience fixtures
-
-
-@pytest.fixture(scope="module")
-def requests_service(app):
-    """Request Factory fixture."""
-    return current_requests.requests_service
-
-
-@pytest.fixture(scope="module")
-def request_events_service(app):
-    """Request Factory fixture."""
-    return current_requests.request_events_service
-
-
-@pytest.fixture()
-def create_request(users, request_record_input_data, requests_service):
-    """Request Factory fixture."""
-
-    user1, user2 = users[0], users[1]
-
-    def _create_request(identity, input_data=None):
-        """Create a request."""
-        input_data = input_data or request_record_input_data
-        # Need to use the service to get the id
-        item = requests_service.create(
-            identity, input_data, DefaultRequestType, receiver=user2, creator=user1
-        )
-        return item._request
-
-    return _create_request
-
-
-@pytest.fixture(scope="module")
-def identity_simple_2():
-    """Another simple identity fixture."""
-    i = Identity(2)
-    i.provides.add(UserNeed(2))
-    i.provides.add(Need(method="system_role", value="any_user"))
-    return i
-
-
-@pytest.fixture()
-def submit_request(create_request, requests_service):
-    """Opened Request Factory fixture."""
-
-    def _submit_request(identity, data=None):
-        """Create and submit a request."""
-        request = create_request(identity)
-        id_ = request.id
-        data = data or {
-            "payload": {
-                "content": "Can I belong to the community?",
-                "format": RequestEventFormat.HTML.value,
-            }
-        }
-        return requests_service.execute_action(identity, id_, "submit", data)
-
-    return _submit_request
-
-
-# Tests
-
 
 def test_submit_request(app, identity_simple, submit_request, request_events_service):
     result = submit_request(identity_simple)
     id_ = result._request.id
     result_dict = result.to_dict()
-
     RequestEvent.index.refresh()
 
     assert "open" == result_dict["status"]
@@ -119,11 +52,13 @@ def test_accept_request(
         }
     }
 
-    # The creator should not be able to decline the request
-    with pytest.raises(PermissionDeniedError):
-        requests_service.execute_action(identity_simple, id_, "accept", data)
-
     # Other user accepts it with comment
+    data = {
+        "payload": {
+            "content": "Welcome to the community!",
+            "format": RequestEventFormat.HTML.value,
+        }
+    }
     result = requests_service.execute_action(identity_simple_2, id_, "accept", data)
     result_dict = result.to_dict()
 
@@ -155,10 +90,6 @@ def test_cancel_request(
         }
     }
 
-    # The receiver should not be able to decline the request
-    with pytest.raises(PermissionDeniedError):
-        requests_service.execute_action(identity_simple_2, id_, "cancel", data)
-
     # Cancel it  (no comment is fine)
     result = requests_service.execute_action(identity_simple, id_, "cancel")
     result_dict = result.to_dict()
@@ -187,10 +118,6 @@ def test_decline_request(
     data = {
         "payload": {"content": "Sorry but no.", "format": RequestEventFormat.HTML.value}
     }
-
-    # The creator should not be able to decline the request
-    with pytest.raises(PermissionDeniedError):
-        requests_service.execute_action(identity_simple, id_, "decline", data)
 
     # Other user declines it
     result = requests_service.execute_action(identity_simple_2, id_, "decline", data)

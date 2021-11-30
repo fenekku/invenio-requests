@@ -67,12 +67,13 @@ def assert_nested_field_allows_type_key(schema, field_name, type_key, negated=Fa
 def customized_app(app):
     """App with registered test request types."""
     # we need to register the custom type, otherwise it won't be available
-    requests = app.extensions["invenio-requests"]
-    registry = requests.request_type_registry
+    requests_ext = app.extensions["invenio-requests"]
+    registry = requests_ext.request_type_registry
     registry.register_type(CustomizedReferenceRequestType)
     registry.register_type(DefaultRequestType)
 
-    requests.requests_service.config.permission_policy_cls = CustomPermissionPolicy
+    requests_ext.requests_service.config.permission_policy_cls = CustomPermissionPolicy
+
     return app
 
 

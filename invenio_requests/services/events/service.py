@@ -9,8 +9,7 @@
 
 """RequestEvents Service."""
 
-import re
-
+from invenio_access.permissions import system_process
 from invenio_records_resources.services import RecordService
 from invenio_records_resources.services.base.links import LinksTemplate
 from invenio_records_resources.services.uow import (
@@ -25,23 +24,6 @@ from ...records.api import RequestEventType
 class RequestEventsService(RecordService):
     """Request Events service."""
 
-    def check_permission(self, identity, action_name, from_action=False, **kwargs):
-        """Check a permission against the identity."""
-        if from_action and "request" in kwargs:
-            # if we're checking permissions for a request action, we try to construct
-            # the permission name from the request action's name
-            type_id = kwargs["request"].type.type_id
-            custom_action_name = re.sub(r"[^a-zA-Z]", "_", f"{type_id}_{action_name}")
-
-            # use the custom action name if there's something registered
-            # otherwise use the default value
-            if hasattr(self.config.permission_policy_cls, f"can_{custom_action_name}"):
-                action_name = custom_action_name
-            else:
-                action_name = f"action_{action_name}"
-
-        return self.permission_policy(action_name, **kwargs).allows(identity)
-
     @unit_of_work()
     def create(self, identity, request_id, data, uow=None):
         """Create a request event.
@@ -51,10 +33,8 @@ class RequestEventsService(RecordService):
         :param dict data: Input data according to the data schema.
         """
         request = self._get_request(request_id)
-        permission, from_action = self._get_permission("create", data["type"])
-        self.require_permission(
-            identity, permission, request=request, from_action=from_action
-        )
+        permission = self._get_permission("create", data["type"])
+        self.require_permission(identity, permission, request=request)
 
         # Validate data (if there are errors, .load() raises)
         data, errors = self.schema.load(
@@ -70,6 +50,8 @@ class RequestEventsService(RecordService):
             type=data["type"],
         )
 
+        creator = self._get_creator(identity)
+
         # Run components
         self.run_components(
             "create",
@@ -77,6 +59,7 @@ class RequestEventsService(RecordService):
             record=record,
             request=request,
             data=data,
+            created_by=creator,
             uow=uow,
         )
 
@@ -93,9 +76,7 @@ class RequestEventsService(RecordService):
     def read(self, identity, id_):
         """Retrieve a record."""
         record = self._get_event(id_)
-        # TODO i think the 'record.request' should give back a Request API class
-        #      rather than a Request Model? (at RequestEvent API class)
-        request = self.request_cls(record.request.data, model=record.request)
+        request = self._get_request(record.request_id)
 
         # Same "read_event" permission for all types of events
         self.require_permission(identity, "read_event", request=request)
@@ -117,10 +98,8 @@ class RequestEventsService(RecordService):
         self.check_revision_id(record, revision_id)
 
         # Permissions
-        permission, from_action = self._get_permission("update", record.type)
-        self.require_permission(
-            identity, permission, request=request, event=record, from_action=from_action
-        )
+        permission = self._get_permission("update", record.type)
+        self.require_permission(identity, permission, event=record)
 
         data, _ = self.schema.load(
             data,
@@ -161,15 +140,13 @@ class RequestEventsService(RecordService):
         delete an event (which is only possible for an admin anyway).
         """
         record = self._get_event(id_)
-        request = self._get_request(record.request.id)
+        request = self._get_request(record.request_id)
 
         self.check_revision_id(record, revision_id)
 
         # Permissions
-        permission, from_action = self._get_permission("delete", record.type)
-        self.require_permission(
-            identity, permission, event=record, request=request, from_action=from_action
-        )
+        permission = self._get_permission("delete", record.type)
+        self.require_permission(identity, permission, request=request, event=record)
 
         if record.type == RequestEventType.COMMENT.value:
             record["payload"]["content"] = ""
@@ -235,16 +212,21 @@ class RequestEventsService(RecordService):
 
         Needed to distinguish between kinds of events.
         """
-        if event_type == RequestEventType.COMMENT.value:
-            return f"{action}_comment", False
-        elif event_type == RequestEventType.ACCEPTED.value:
-            return "accept", True
-        elif event_type == RequestEventType.DECLINED.value:
-            return "decline", True
-        elif event_type == RequestEventType.CANCELLED.value:
-            return "cancel", True
-        else:
-            return f"{action}_event", False
+        if (
+            (event_type == RequestEventType.COMMENT.value)
+            and (action in ["create", "update", "delete"])
+        ):
+            return f"{action}_comment"
+
+        if action == "create":
+            if event_type == RequestEventType.ACCEPTED.value:
+                return "action_accept"
+            elif event_type == RequestEventType.DECLINED.value:
+                return "action_decline"
+            elif event_type == RequestEventType.CANCELLED.value:
+                return "action_cancel"
+
+        return f"{action}_event"
 
     def _get_request(self, request_id):
         """Get associated request."""
@@ -253,3 +235,10 @@ class RequestEventsService(RecordService):
     def _get_event(self, event_id, with_deleted=True):
         """Get associated event_id."""
         return self.record_cls.get_record(event_id, with_deleted=with_deleted)
+
+    def _get_creator(self, identity):
+        """Get the creator dict from the identity."""
+        if system_process in identity.provides:
+            return None  # TODO: Change this for some agreed value
+        else:
+            return {"user": str(identity.id)}

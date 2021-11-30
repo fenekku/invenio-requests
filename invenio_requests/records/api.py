@@ -9,6 +9,7 @@
 """API classes for requests in Invenio."""
 
 from enum import Enum
+from functools import partial
 
 from invenio_records.dumpers import ElasticsearchDumper
 from invenio_records.systemfields import ConstantField, DictField, ModelField
@@ -30,6 +31,7 @@ from .systemfields import (
 from .systemfields.entity_reference import (
     check_allowed_creators,
     check_allowed_receivers,
+    check_allowed_references,
     check_allowed_topics,
 )
 
@@ -169,6 +171,11 @@ class RequestEvent(Record):
     id = ModelField("id")
     """The data-layer id."""
 
-    # TODO: Revisit when dealing with ownership
-    created_by = DictField("created_by")
+    check_referenced = partial(
+        check_allowed_references,
+        lambda r: True,  # for system process for now
+        lambda r: ["user"]  # only users for now
+    )
+
+    created_by = ReferencedEntityField("created_by", check_referenced)
     """Who created the event."""

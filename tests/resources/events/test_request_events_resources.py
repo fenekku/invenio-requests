@@ -52,7 +52,6 @@ def test_simple_comment_flow(
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa
-            # "self_html": "",  # TODO: UI link
             # "report": ""  # TODO
         },
         "revision_id": 1,

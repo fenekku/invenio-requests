@@ -118,7 +118,7 @@ class Commenter(Generator):
 
     def needs(self, event=None, **kwargs):
         """Enabling Needs."""
-        return [any_user]
+        return [event.created_by.get_need()]
 
         # TODO: events also need this kind of structure
         if event is None:
@@ -164,12 +164,16 @@ class PermissionPolicy(RecordPermissionPolicy):
 
     # Request Events: Comments
     can_create_comment = [Creator(), Receiver(check=is_no_draft), SystemProcess()]
+    # TODO: test permission that commenter can update its own comment
     can_update_comment = [Commenter(), SystemProcess()]
-    can_delete_comment = [Commenter(), SystemProcess()]
+    # TODO: test permission that commenter and receiver can delete comment
+    can_delete_comment = [Commenter(), Receiver(), SystemProcess()]
 
     # Request Events: All other events
-    can_create_event = [AnyUser(), SystemProcess()]
+    can_create_event = [SystemProcess()]
+    # TODO: test permission request creator and receiver can read an event
     can_read_event = [Creator(), Receiver(), SystemProcess()]
     can_update_event = [SystemProcess()]
     can_delete_event = [SystemProcess()]
+    # TODO: creator and receiver can see the full timeline
     can_search_event = [Creator(), Receiver(), SystemProcess()]

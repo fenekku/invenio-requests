@@ -89,7 +89,7 @@ def test_reference_search_filters(app, client_logged_as, headers, example_reques
 def test_empty_comment(
     app, client_logged_as, headers, example_requests, request_action_resource_data
 ):
-    client = client_logged_as("user1@example.org")
+    client = client_logged_as("admin@example.org")
     r1, r2, r3 = example_requests
     for r in [r1, r2, r3]:
         r.status = "open"
@@ -108,8 +108,6 @@ def test_empty_comment(
     assert "accepted" == response.json["status"]
 
     # Accept empty content is an error
-    # (example request 3 has a different receiver)
-    client = client_logged_as("user2@example.org")
     data = copy.deepcopy(request_action_resource_data)
     data["payload"]["content"] = ""
     response = client.post(
