@@ -114,7 +114,7 @@ class RequestsService(RecordService):
             errors=errors,
         )
 
-    def read(self, id_, identity):
+    def read(self, identity, id_):
         """Retrieve a request."""
         # resolve and require permission
         request = self.record_cls.get_record(id_)
@@ -134,14 +134,12 @@ class RequestsService(RecordService):
         )
 
     @unit_of_work()
-    def update(self, id_, identity, data, revision_id=None, uow=None):
+    def update(self, identity, id_, data, revision_id=None, uow=None):
         """Update a request."""
         request = self.record_cls.get_record(id_)
 
-        # TODO do we need revisions for requests?
-        # self.check_revision_id(request, revision_id)
+        self.check_revision_id(request, revision_id)
 
-        # check permissions
         self.require_permission(identity, "update", request=request)
 
         # we're not using "self.schema" b/c the schema may differ per request type!
@@ -155,7 +153,7 @@ class RequestsService(RecordService):
         )
 
         # run components
-        self.run_components("update", data=data, record=request, uow=uow)
+        self.run_components("update", identity, data=data, record=request, uow=uow)
 
         uow.register(RecordCommitOp(request, indexer=self.indexer))
 
@@ -168,7 +166,7 @@ class RequestsService(RecordService):
         )
 
     @unit_of_work()
-    def delete(self, id_, identity, uow=None):
+    def delete(self, identity, id_, uow=None):
         """Delete a request from database and search indexes."""
         request = self.record_cls.get_record(id_)
 

@@ -13,7 +13,7 @@
 from elasticsearch_dsl import Q
 from invenio_access.permissions import any_user
 from invenio_records_permissions import RecordPermissionPolicy
-from invenio_records_permissions.generators import AnyUser, Generator, SystemProcess
+from invenio_records_permissions.generators import AnyUser, AuthenticatedUser, Generator, SystemProcess
 
 
 class RequestCheckGenerator(Generator):
@@ -35,6 +35,13 @@ class RequestCheckGenerator(Generator):
         return True
 
 
+def _get_id(identity):
+    """Get string id from identity."""
+    for need in identity.provides:
+        if need.method == 'id':
+            return str(need.value)
+    return ""
+
 class Creator(RequestCheckGenerator):
     """Allows request makers."""
 
@@ -55,8 +62,12 @@ class Creator(RequestCheckGenerator):
 
     def query_filter(self, identity=None, **kwargs):
         """Filters for current identity as owner."""
-        # TODO when request is more fleshed out
-        return Q("match_all")
+        # We assume a request creator is a user for now
+        if identity:
+            user_id = _get_id(identity)
+            return Q("term", **{"created_by.user": user_id})
+        else:
+            return []
 
 
 class Receiver(RequestCheckGenerator):
@@ -79,8 +90,12 @@ class Receiver(RequestCheckGenerator):
 
     def query_filter(self, identity=None, **kwargs):
         """Filters for current identity as owner."""
-        # TODO when request is more fleshed out
-        return []
+        # It is up to community module to define community receivers
+        if identity:
+            user_id = _get_id(identity)
+            return Q("term", **{"receiver.user": user_id})
+        else:
+            return []
 
 
 def is_open(request):
@@ -145,15 +160,12 @@ class PermissionPolicy(RecordPermissionPolicy):
     # - require: if receiver is community AND community restricted:
     #   community <id> member (delegate to entity?)
     can_create = [AnyUser(), SystemProcess()]
-
-    # - require: authenticated user
-    can_search = [AnyUser(), SystemProcess()]
-    # - require: user is creator or receiver
-    can_read = [Creator(), Receiver(check=is_no_draft), SystemProcess()]
-    # - require: user is creator or receiver
-    can_update = [Creator(check=is_not_closed), SystemProcess()]
-    # - require: admins only?
+    can_read = [Creator(), Receiver(check=is_open), SystemProcess()]
+    can_update = [Creator(check=is_not_closed), Receiver(check=is_open), SystemProcess()]
+    # TODO: - require: admins only?
     can_delete = [Creator(check=is_not_open), SystemProcess()]
+    # For search, recall that _what_ identities can see is defined by `can_read`
+    can_search = [AuthenticatedUser(), SystemProcess()]
 
     # Actions: Submit/Cancel/Accept/Decline/Expire
     can_action_submit = [Creator(check=is_draft), SystemProcess()]
@@ -171,7 +183,6 @@ class PermissionPolicy(RecordPermissionPolicy):
 
     # Request Events: All other events
     can_create_event = [SystemProcess()]
-    # TODO: test permission request creator and receiver can read an event
     can_read_event = [Creator(), Receiver(), SystemProcess()]
     can_update_event = [SystemProcess()]
     can_delete_event = [SystemProcess()]

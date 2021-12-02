@@ -37,12 +37,13 @@ def request_events_service(app):
 def create_request(users, request_record_input_data, requests_service):
     """Request Factory fixture."""
 
-    def _create_request(identity, input_data=None):
+    def _create_request(identity, input_data=None, receiver=None, **kwargs):
         """Create a request."""
         input_data = input_data or request_record_input_data
+        receiver = receiver or users[1]
         # Need to use the service to get the id
         item = requests_service.create(
-            identity, input_data, DefaultRequestType, receiver=users[1]
+            identity, input_data, DefaultRequestType, receiver=receiver, **kwargs
         )
         return item._request
 
@@ -63,6 +64,6 @@ def submit_request(create_request, requests_service):
                 "format": RequestEventFormat.HTML.value,
             }
         }
-        return requests_service.execute_action(identity, id_, "submit", data)
+        return requests_service.execute_action(identity, id_, "submit", data)._request
 
     return _submit_request

@@ -80,6 +80,7 @@ def identity_simple():
     i = Identity(1)
     i.provides.add(UserNeed(1))
     i.provides.add(Need(method="system_role", value="any_user"))
+    i.provides.add(Need(method="system_role", value="authenticated_user"))
     return i
 
 
@@ -89,6 +90,7 @@ def identity_simple_2():
     i = Identity(2)
     i.provides.add(UserNeed(2))
     i.provides.add(Need(method="system_role", value="any_user"))
+    i.provides.add(Need(method="system_role", value="authenticated_user"))
     return i
 
 

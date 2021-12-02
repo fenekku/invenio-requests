@@ -11,7 +11,6 @@
 """Requests service configuration."""
 
 from invenio_records_resources.services import RecordServiceConfig, SearchOptions
-from invenio_records_resources.services.records.components import DataComponent
 from invenio_records_resources.services.records.links import pagination_links
 
 from ...customizations.base import RequestActions
@@ -20,6 +19,7 @@ from ..permissions import PermissionPolicy
 from .components import (
     DefaultStatusComponent,
     EntityReferencesComponent,
+    RequestDataComponent,
     RequestNumberComponent,
 )
 from .customization import RequestsConfigMixin
@@ -68,7 +68,7 @@ class RequestsServiceConfig(RecordServiceConfig, RequestsConfigMixin):
 
     components = [
         # Order of components are important!
-        DataComponent,
+        RequestDataComponent,
         DefaultStatusComponent,
         EntityReferencesComponent,
         RequestNumberComponent,
