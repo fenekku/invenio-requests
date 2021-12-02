@@ -49,6 +49,7 @@ def test_simple_comment_flow(
     comment_id = response.json["id"]
     expected_json_1 = {
         **events_resource_data,
+        "created_by": {"user": "1"},
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa
@@ -92,10 +93,10 @@ def test_simple_comment_flow(
     )
     expected_json_2 = {
         **data,
+        "created_by": {"user": "2"},
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa
-            # "self_html": "",  # TODO: UI link
             # "report": ""  # TODO
         },
         "revision_id": 2,
@@ -120,6 +121,7 @@ def test_simple_comment_flow(
     assert 2 == response.json["hits"]["total"]
     assert_api_response_json(expected_json_1, response.json["hits"]["hits"][0])
     expected_json_3 = {
+        "created_by": {"user": "2"},
         "id": comment_id,
         "links": {
             "self": f"https://127.0.0.1:5000/api/requests/{request_id}/comments/{comment_id}",  # noqa

@@ -29,13 +29,16 @@ def test_schemas(app, events_service_data, example_request):
 
 
 def test_simple_flow(
-        app, identity_simple, events_service_data, example_request):
+        app, identity_simple, events_service_data, create_request,
+        request_events_service):
     """Interact with comment events."""
-    events_service = current_requests.request_events_service
-    request_id = example_request.id
+    request = create_request(identity_simple)
+    request_id = request.id
 
     # Create a comment
-    item = events_service.create(identity_simple, request_id, events_service_data)
+    item = request_events_service.create(
+        identity_simple, request_id, events_service_data
+    )
     item_dict = item.to_dict()
     assert events_service_data["type"] == item_dict["type"]
     assert events_service_data["payload"] == {
@@ -45,40 +48,40 @@ def test_simple_flow(
     id_ = item.id
 
     # Read it
-    read_item = events_service.read(identity_simple, id_)
+    read_item = request_events_service.read(identity_simple, id_)
     assert item.id == read_item.id
     assert item.to_dict() == read_item.to_dict()
 
     # Update it
     data = read_item.to_dict()  # should be equivalent to events_service_data
     data["payload"]["content"] = "An edited comment"
-    updated_item = events_service.update(identity_simple, id_, data)
+    updated_item = request_events_service.update(identity_simple, id_, data)
     assert id_ == updated_item.id
     assert "An edited comment" == updated_item.to_dict()["payload"]["content"]
 
     # Delete it
-    deleted_item = events_service.delete(identity_simple, id_)
+    deleted_item = request_events_service.delete(identity_simple, id_)
     assert deleted_item is True
-    read_deleted_item = events_service.read(identity_simple, id_)
+    read_deleted_item = request_events_service.read(identity_simple, id_)
     read_del_item_dict = read_deleted_item.to_dict()
     assert id_ == read_deleted_item.id
     assert RequestEventType.REMOVED.value == read_del_item_dict["type"]
 
     # Search (batch read) events
-    # first add another comment
+    # Let's create a separate request with comment and make sure search is isolated
     data = copy.deepcopy(events_service_data)
     data["payload"]["content"] = "Another comment."
-    events_service.create(identity_simple, request_id, data)
+    other_request = create_request(identity_simple, data)
     # Refresh to make changes live
     RequestEvent.index.refresh()
     # then search
-    searched_items = events_service.search(
+    searched_items = request_events_service.search(
         identity_simple,
         request_id,
         size=10,
         page=1,
     )
-    assert 2 == searched_items.total
+    assert 1 == searched_items.total
 
 
 def test_delete_non_comment(

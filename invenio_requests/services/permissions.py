@@ -11,9 +11,12 @@
 """Request permissions."""
 
 from elasticsearch_dsl import Q
-from invenio_access.permissions import any_user
 from invenio_records_permissions import RecordPermissionPolicy
-from invenio_records_permissions.generators import AnyUser, AuthenticatedUser, Generator, SystemProcess
+from invenio_records_permissions.generators import (
+    AuthenticatedUser,
+    Generator,
+    SystemProcess,
+)
 
 
 class RequestCheckGenerator(Generator):
@@ -42,14 +45,17 @@ def _get_id(identity):
             return str(need.value)
     return ""
 
+
 class Creator(RequestCheckGenerator):
     """Allows request makers."""
 
-    def needs(self, request=None, **kwargs):
-        """Enabling Needs.
+    def __init__(self, check=None, disable_query=False):
+        """Constructor."""
+        super().__init__(check)
+        self.disable_query = disable_query
 
-        record is a request here
-        """
+    def needs(self, request=None, **kwargs):
+        """Enabling Needs."""
         if request is None:
             return []
 
@@ -62,8 +68,11 @@ class Creator(RequestCheckGenerator):
 
     def query_filter(self, identity=None, **kwargs):
         """Filters for current identity as owner."""
-        # We assume a request creator is a user for now
+        if self.disable_query:
+            return []
+
         if identity:
+            # We assume creators are users for now
             user_id = _get_id(identity)
             return Q("term", **{"created_by.user": user_id})
         else:
@@ -72,6 +81,11 @@ class Creator(RequestCheckGenerator):
 
 class Receiver(RequestCheckGenerator):
     """Allows request Receiver."""
+
+    def __init__(self, check=None, disable_query=False):
+        """Constructor."""
+        super().__init__(check)
+        self.disable_query = disable_query
 
     def needs(self, request=None, **kwargs):
         """Enabling Needs.
@@ -90,6 +104,9 @@ class Receiver(RequestCheckGenerator):
 
     def query_filter(self, identity=None, **kwargs):
         """Filters for current identity as owner."""
+        if self.disable_query:
+            return []
+
         # It is up to community module to define community receivers
         if identity:
             user_id = _get_id(identity)
@@ -152,18 +169,33 @@ class Commenter(Generator):
             return Q("terms", **{"created_by.user": users})
 
 
+class AllowedSearcher(Generator):
+    """Any user that was allowed by the corresponding can_search.
+
+    This is a "cheat" originally created so that Events don't need to be indexed with a
+    corresponding serialized Request. The can_search permission already restricts
+    who can search and in the case of Events, those can see all Events.
+    """
+
+    def query_filter(self, identity=None, **kwargs):
+        """Returns all and counts on service to filter by request_id."""
+        return Q("match_all")
+
+
 class PermissionPolicy(RecordPermissionPolicy):
     """Permission policy."""
 
     # TODO:
-    # - require: authenticated user,
     # - require: if receiver is community AND community restricted:
     #   community <id> member (delegate to entity?)
-    can_create = [AnyUser(), SystemProcess()]
+    can_create = [AuthenticatedUser(), SystemProcess()]
     can_read = [Creator(), Receiver(check=is_open), SystemProcess()]
-    can_update = [Creator(check=is_not_closed), Receiver(check=is_open), SystemProcess()]
-    # TODO: - require: admins only?
-    can_delete = [Creator(check=is_not_open), SystemProcess()]
+    can_update = [
+        Creator(check=is_not_closed),
+        Receiver(check=is_open),
+        SystemProcess(),
+    ]
+    can_delete = [SystemProcess()]
     # For search, recall that _what_ identities can see is defined by `can_read`
     can_search = [AuthenticatedUser(), SystemProcess()]
 
@@ -176,15 +208,19 @@ class PermissionPolicy(RecordPermissionPolicy):
 
     # Request Events: Comments
     can_create_comment = [Creator(), Receiver(check=is_no_draft), SystemProcess()]
-    # TODO: test permission that commenter can update its own comment
     can_update_comment = [Commenter(), SystemProcess()]
-    # TODO: test permission that commenter and receiver can delete comment
+    # Might need to revisit
     can_delete_comment = [Commenter(), Receiver(), SystemProcess()]
 
     # Request Events: All other events
     can_create_event = [SystemProcess()]
-    can_read_event = [Creator(), Receiver(), SystemProcess()]
+    can_read_event = [
+        # this is a search over Events and not Requests so we disable the search
+        Creator(disable_query=True),
+        Receiver(check=is_no_draft, disable_query=True),
+        AllowedSearcher(),
+        SystemProcess(),
+    ]
     can_update_event = [SystemProcess()]
     can_delete_event = [SystemProcess()]
-    # TODO: creator and receiver can see the full timeline
-    can_search_event = [Creator(), Receiver(), SystemProcess()]
+    can_search_event = [Creator(), Receiver(check=is_no_draft), SystemProcess()]

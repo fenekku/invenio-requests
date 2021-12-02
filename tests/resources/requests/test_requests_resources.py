@@ -191,12 +191,3 @@ def test_simple_request_flow(app, client_logged_as, headers, example_request):
         }
     )
     assert_api_response(response, 200, expected_data)
-
-    # delete the request
-    response = client.delete(f"/requests/{id_}", headers=headers)
-    assert response.status_code == 204
-    assert response.json is None
-
-    # make sure it was deleted
-    response = client.get(f"/requests/{id_}", headers=headers)
-    assert response.status_code == 404

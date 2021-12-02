@@ -214,3 +214,29 @@ def test_only_system_can_update_closed_request(
         requests_service.update(identity_simple, request_id, data)
     # System
     assert requests_service.update(system_identity, request_id, data)
+
+
+def test_only_authenticated_user_can_create_request(
+        app, identity_simple, identity_stranger,
+        requests_service, create_request):
+    # Stranger
+    with pytest.raises(PermissionDeniedError):
+        create_request(identity_stranger)
+    # Creator
+    assert create_request(identity_simple)
+
+
+def test_only_system_can_delete_request(
+        app, identity_simple, identity_stranger,
+        requests_service, create_request):
+    request = create_request(identity_simple)
+    request_id = request.id
+
+    # Stranger
+    with pytest.raises(PermissionDeniedError):
+        requests_service.delete(identity_stranger, request_id)
+    # Creator
+    with pytest.raises(PermissionDeniedError):
+        requests_service.delete(identity_simple, request_id)
+    # System
+    assert requests_service.delete(system_identity, request_id)

@@ -21,13 +21,12 @@ from invenio_requests.records.api import (
 
 
 def test_submit_request(app, identity_simple, submit_request, request_events_service):
-    result = submit_request(identity_simple)
-    id_ = result._request.id
-    result_dict = result.to_dict()
+    request = submit_request(identity_simple)
+    request_id = request.id
     RequestEvent.index.refresh()
 
-    assert "open" == result_dict["status"]
-    results = request_events_service.search(identity_simple, id_)
+    assert "open" == request.status
+    results = request_events_service.search(identity_simple, request_id)
     assert 1 == results.total
     hits = list(results.hits)
     assert RequestEventType.COMMENT.value == hits[0]["type"]
@@ -43,16 +42,8 @@ def test_accept_request(
     request_events_service,
 ):
     # Submit a request
-    result = submit_request(identity_simple)
-    id_ = result._request.id
-
-    data = {
-        "payload": {
-            "content": "Welcome to the community!",
-            "format": RequestEventFormat.HTML.value,
-        }
-    }
-
+    request = submit_request(identity_simple)
+    request_id = request.id
     # Other user accepts it with comment
     data = {
         "payload": {
@@ -60,13 +51,15 @@ def test_accept_request(
             "format": RequestEventFormat.HTML.value,
         }
     }
-    result = requests_service.execute_action(identity_simple_2, id_, "accept", data)
-    result_dict = result.to_dict()
 
+    result = requests_service.execute_action(
+        identity_simple_2, request_id, "accept", data
+    )
+    request = result._request
     RequestEvent.index.refresh()
 
-    assert "accepted" == result_dict["status"]
-    results = request_events_service.search(identity_simple_2, id_)
+    assert "accepted" == request.status
+    results = request_events_service.search(identity_simple, request_id)
     assert 3 == results.total  # submit comment + accept + comment
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.ACCEPTED.value == h["type"]])
@@ -81,8 +74,8 @@ def test_cancel_request(
     request_events_service,
 ):
     # Submit a request
-    result = submit_request(identity_simple)
-    id_ = result._request.id
+    request = submit_request(identity_simple)
+    request_id = request.id
 
     data = {
         "payload": {
@@ -92,13 +85,13 @@ def test_cancel_request(
     }
 
     # Cancel it  (no comment is fine)
-    result = requests_service.execute_action(identity_simple, id_, "cancel")
-    result_dict = result.to_dict()
+    result = requests_service.execute_action(identity_simple, request_id, "cancel")
+    request = result._request
 
     RequestEvent.index.refresh()
 
-    assert "cancelled" == result_dict["status"]
-    results = request_events_service.search(identity_simple, id_)
+    assert "cancelled" == request.status
+    results = request_events_service.search(identity_simple, request_id)
     assert 2 == results.total  # submit comment + cancel
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.CANCELLED.value == h["type"]])
@@ -113,21 +106,26 @@ def test_decline_request(
     request_events_service,
 ):
     # Submit a request
-    result = submit_request(identity_simple)
-    id_ = result._request.id
+    request = submit_request(identity_simple)
+    request_id = request.id
 
     data = {
-        "payload": {"content": "Sorry but no.", "format": RequestEventFormat.HTML.value}
+        "payload": {
+            "content": "Sorry but no.",
+            "format": RequestEventFormat.HTML.value
+        }
     }
 
     # Other user declines it
-    result = requests_service.execute_action(identity_simple_2, id_, "decline", data)
-    result_dict = result.to_dict()
+    result = requests_service.execute_action(
+        identity_simple_2, request_id, "decline", data
+    )
+    request = result._request
 
     RequestEvent.index.refresh()
 
-    assert "declined" == result_dict["status"]
-    results = request_events_service.search(identity_simple, id_)
+    assert "declined" == request.status
+    results = request_events_service.search(identity_simple, request_id)
     assert 3 == results.total  # submit comment + decline + comment
     hits = list(results.hits)
     assert 1 == len([h for h in hits if RequestEventType.DECLINED.value == h["type"]])

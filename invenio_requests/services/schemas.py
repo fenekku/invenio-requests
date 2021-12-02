@@ -122,6 +122,7 @@ class BaseEventSchema(BaseRecordSchema):
     """Base Event schema that other schemas should inherit from."""
 
     type = ModelFieldStr(required=True)
+    created_by = fields.Dict(dump_only=True)
 
 
 class CommentSchema(BaseEventSchema):

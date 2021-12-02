@@ -165,9 +165,7 @@ class RequestEventsService(RecordService):
         # we return as though we did.
         return True
 
-    def search(
-        self, identity, request_id=None, params=None, es_preference=None, **kwargs
-    ):
+    def search(self, identity, request_id, params=None, es_preference=None, **kwargs):
         """Search for events (optionally of request_id) matching the querystring."""
         params = params or {}
         params.setdefault("sort", "oldest")
@@ -186,7 +184,7 @@ class RequestEventsService(RecordService):
             **kwargs,
         )
         if request_id:
-            search = search.filter("term", request_id=str(request.id))
+            search = search.filter("term", request_id=str(request_id))
         search_result = search.execute()
 
         return self.result_list(

@@ -10,7 +10,7 @@
 """Component for creating request numbers."""
 
 from invenio_records_resources.services.records.components import (
-    DataComponent, 
+    DataComponent,
     ServiceComponent,
 )
 
@@ -54,8 +54,10 @@ class RequestDataComponent(DataComponent):
         # Clear None values from the record.
         record.clear_none()
 
-class DefaultStatusComponent(ServiceComponent): 
+
+class DefaultStatusComponent(ServiceComponent):
     """Component for initializing the default status of the request."""
-    def create(self, identity, data=None, record=None, **kwargs):        
-        """Initialize the default status of the request."""        
-        record.status = record.type.default_statuss
+
+    def create(self, identity, data=None, record=None, **kwargs):
+        """Initialize the default status of the request."""
+        record.status = record.type.default_status
