@@ -72,12 +72,13 @@ class RequestSchema(BaseRecordSchema):
     receiver, and topic) are dynamically constructed and injected into this schema.
     """
 
-    number = fields.String(dump_only=True)
+    # load and dump
     type = fields.String()
     title = utils_fields.SanitizedUnicode(default="")
     description = utils_fields.SanitizedUnicode()
 
-    # status information is also likely set by the service
+    # Dump-only
+    number = fields.String(dump_only=True)
     status = fields.String(dump_only=True)
     is_closed = fields.Boolean(dump_only=True)
     is_open = fields.Boolean(dump_only=True)

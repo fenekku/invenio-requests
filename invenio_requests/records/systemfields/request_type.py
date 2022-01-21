@@ -50,8 +50,8 @@ class RequestTypeField(SystemField):
 
         type_id = self.get_dictkey(instance)
         obj = current_registry.lookup(type_id)
-
         self._set_cache(instance, obj)
+
         return obj
 
     def __get__(self, record, owner=None):

@@ -143,3 +143,20 @@ def test_default_status(users, request_record_input_data, requests_service):
     )._request
 
     assert request.status == request.type.default_status
+
+
+def test_update_request(app, identity_simple, submit_request, requests_service):
+    request = submit_request(identity_simple)
+    request_id = request.id
+
+    request = requests_service.update(
+        identity_simple,
+        request_id,
+        {
+            "title": "Zim boum ba",
+            "type": "default-request"
+        }
+    )
+
+    request_dict = request.to_dict()
+    assert "Zim boum ba" == request_dict["title"]

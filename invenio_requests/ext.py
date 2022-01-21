@@ -95,7 +95,7 @@ class InvenioRequests:
         )
 
     def init_registry(self, app):
-        """Initialize the resgistry for Requests per type."""
+        """Initialize the registry for Requests per type."""
         self.request_type_registry = TypeRegistry(
             app.config["REQUESTS_REGISTERED_TYPES"]
         )

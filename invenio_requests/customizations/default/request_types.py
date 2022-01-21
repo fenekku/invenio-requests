@@ -24,7 +24,7 @@ from .actions import (
 
 
 class DefaultRequestType(RequestType):
-    """Base class for custom request types."""
+    """Default class for request types."""
 
     type_id = "default-request"
     """The unique and constant identifier for this type of requests.
