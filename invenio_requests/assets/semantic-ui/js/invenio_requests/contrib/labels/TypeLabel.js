@@ -1,5 +1,6 @@
 // This file is part of InvenioRequests
 // Copyright (C) 2022 CERN.
+// Copyright (C) 2024 Northwestern University.
 //
 // Invenio RDM Records is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
@@ -47,5 +48,11 @@ export const LabelTypeCommunityManageRecord = (props) => (
 export const LabelTypeCommunitySubcommunity = (props) => (
   <Label horizontal className="primary" size="small">
     {i18next.t("Subcommunity")}
+  </Label>
+);
+
+export const LabelTypeCommunityMembershipRequest = (props) => (
+  <Label horizontal className="primary" size="small">
+    {i18next.t("Membership request")}
   </Label>
 );

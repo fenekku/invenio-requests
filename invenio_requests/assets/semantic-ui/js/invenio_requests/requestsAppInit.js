@@ -1,5 +1,6 @@
 // This file is part of InvenioRequests
 // Copyright (C) 2022 CERN.
+// Copyright (C) 2024 Northwestern University.
 //
 // Invenio RDM Records is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more details.
@@ -29,7 +30,8 @@ import {
   LabelTypeGuestAccess,
   LabelTypeUserAccess,
   LabelTypeCommunityManageRecord,
-  LabelTypeCommunitySubcommunity
+  LabelTypeCommunitySubcommunity,
+  LabelTypeCommunityMembershipRequest,
 } from "./contrib";
 import {
   AcceptStatus,
@@ -75,6 +77,7 @@ const defaultComponents = {
   "RequestTypeLabel.layout.user-access-request": LabelTypeUserAccess,
   "RequestTypeLabel.layout.community-manage-record": LabelTypeCommunityManageRecord,
   "RequestTypeLabel.layout.subcommunity": LabelTypeCommunitySubcommunity,
+  "RequestTypeLabel.layout.community-membership-request": LabelTypeCommunityMembershipRequest,
   "RequestActionModalTrigger.accept": RequestAcceptModalTrigger,
   "RequestActionModalTrigger.decline": RequestDeclineModalTrigger,
   "RequestActionModalTrigger.cancel": RequestCancelModalTrigger,
