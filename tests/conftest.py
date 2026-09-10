@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021-2025 CERN.
 # SPDX-FileCopyrightText: 2021-2025 Northwestern University.
 # SPDX-FileCopyrightText: 2021 TU Wien.
-# SPDX-FileCopyrightText: 2023-2025 Graz University of Technology.
+# SPDX-FileCopyrightText: 2023-2026 Graz University of Technology.
 # SPDX-FileCopyrightText: 2026 KTH Royal Institute of Technology.
 # SPDX-License-Identifier: MIT
 
@@ -413,7 +413,7 @@ def client_logged_as(client, users, superuser, moderator_user):
         available_users = list(users.values()) + [superuser, moderator_user]
 
         user = next((u.user for u in available_users if u.email == user_email), None)
-        login_user(user, remember=True)
+        login_user(user)
         login_user_via_session(client, email=user_email)
         return client
 
