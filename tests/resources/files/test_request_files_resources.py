@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 CERN.
+# SPDX-FileCopyrightText: 2026 Graz University of Technology.
 # SPDX-License-Identifier: MIT
 
 """Request Files resource tests."""
@@ -81,7 +82,7 @@ def upload_file(
         # Validate that the key has a base32 suffix (length of 10 characters, split every 5 characters)
         assert "key" in response.json
         unique_key = response.json["key"]
-        assert re.match(key_base + "-\w{5}-\w{5}" + key_ext, unique_key)
+        assert re.match(key_base + r"-\w{5}-\w{5}" + key_ext, unique_key)
 
         key = f"{key_base}{key_ext}"
         size = len(data_content)
