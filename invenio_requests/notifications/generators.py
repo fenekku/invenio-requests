@@ -136,6 +136,10 @@ class CommentRepliesParticipantsRecipient(RecipientGenerator):
                 dsl.Q("term", parent_id=parent_id),
             ],
         )
+        # Ensure replies committed immediately before notification processing are
+        # visible when collecting the thread participants.
+        current_events_service.indexer.refresh()
+
         # Get all children (replies) and their creators
         # NOTE: To be improved in https://github.com/inveniosoftware/invenio-requests/issues/508
         children_events = current_events_service.scan(
