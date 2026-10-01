@@ -8,6 +8,10 @@
 Changes
 =======
 
+Version v15.2.2 (released 2026-10-01)
+
+- fix(notifications): refresh replies before resolving participants
+
 Version v15.2.1 (released 2026-08-27)
 
 - fix(permissions): allow receivers to update finalized requests
